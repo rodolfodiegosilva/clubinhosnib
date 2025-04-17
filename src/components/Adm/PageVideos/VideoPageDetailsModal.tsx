@@ -13,7 +13,7 @@ import {
   Paper,
   Grid,
 } from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
+import { ContentCopy, Close } from "@mui/icons-material";
 import { VideoPageData, VideoItem } from "store/slices/video/videoSlice";
 
 interface ExtendedVideoItem extends VideoItem {
@@ -59,17 +59,27 @@ export default function VideoPageDetailsModal({
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          textAlign: "center",
-          fontWeight: "bold",
-          fontSize: "1.5rem",
-          color: "#333",
-          p: 2,
-        }}
-      >
-        Detalhes da Página de Vídeos
-      </DialogTitle>
+      <Box sx={{ position: "relative" }}>
+        <DialogTitle
+          sx={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+            color: "#333",
+            p: 2,
+          }}
+        >
+          Detalhes da Página de Vídeos
+        </DialogTitle>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ position: "absolute", top: 12, right: 12 }}
+          title="Fechar"
+        >
+          <Close />
+        </IconButton>
+      </Box>
 
       <DialogContent sx={{ px: 2, py: 1 }}>
         {page && (
@@ -116,7 +126,6 @@ export default function VideoPageDetailsModal({
               </Grid>
             </Paper>
 
-            {/* Lista de Vídeos */}
             {page.videos.length > 0 && (
               <>
                 <Divider sx={{ my: 2 }} />
@@ -151,27 +160,18 @@ export default function VideoPageDetailsModal({
                               {video.title || "Sem Título"}
                             </Typography>
 
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#555", mt: 0.5 }}
-                            >
+                            <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
                               <strong>Descrição:</strong>{" "}
                               {video.description || "Sem Descrição"}
                             </Typography>
 
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#555", mt: 0.5 }}
-                            >
+                            <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
                               <strong>Tipo:</strong>{" "}
                               {video.type === "upload" ? "Upload" : "Link"}
                             </Typography>
 
                             {video.platform && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
+                              <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
                                 <strong>Plataforma:</strong> {video.platform}
                               </Typography>
                             )}
@@ -186,10 +186,7 @@ export default function VideoPageDetailsModal({
                                   flexWrap: "wrap",
                                 }}
                               >
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: "#555" }}
-                                >
+                                <Typography variant="body2" sx={{ color: "#555" }}>
                                   <strong>URL:</strong> {video.url}
                                 </Typography>
                                 <IconButton
@@ -204,20 +201,13 @@ export default function VideoPageDetailsModal({
                             )}
 
                             {extendedVideo.isLocalFile && extendedVideo.originalName && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
-                                <strong>Nome Original:</strong>{" "}
-                                {extendedVideo.originalName}
+                              <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                                <strong>Nome Original:</strong> {extendedVideo.originalName}
                               </Typography>
                             )}
 
                             {extendedVideo.size && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
+                              <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
                                 <strong>Tamanho:</strong>{" "}
                                 {(extendedVideo.size / 1024 / 1024).toFixed(2)} MB
                               </Typography>

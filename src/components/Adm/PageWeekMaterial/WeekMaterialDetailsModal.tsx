@@ -13,7 +13,7 @@ import {
   Paper,
   Grid,
 } from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
+import { ContentCopy, Close } from "@mui/icons-material";
 import { WeekMaterialPageData } from "store/slices/week-material/weekMaterialSlice";
 
 interface WeekMaterialDetailsModalProps {
@@ -51,9 +51,23 @@ export default function WeekMaterialDetailsModal({
           padding: 2,
           borderRadius: 3,
           bgcolor: "#fafafa",
+          position: "relative",
         },
       }}
     >
+      {/* Botão X para fechar */}
+      <IconButton
+        onClick={onClose}
+        sx={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          color: "#555",
+        }}
+      >
+        <Close />
+      </IconButton>
+
       <DialogTitle
         sx={{
           textAlign: "center",
@@ -71,13 +85,7 @@ export default function WeekMaterialDetailsModal({
           <Stack spacing={4}>
             {/* Informações Gerais */}
             <Paper elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: "#fff" }}>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                color="primary"
-                textAlign="center"
-                mb={3}
-              >
+              <Typography variant="h6" fontWeight="bold" color="primary" textAlign="center" mb={3}>
                 Informações Gerais
               </Typography>
               <Grid container spacing={2}>
@@ -92,10 +100,7 @@ export default function WeekMaterialDetailsModal({
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: "#333", whiteSpace: "pre-wrap" }}
-                  >
+                  <Typography variant="body1" sx={{ color: "#333", whiteSpace: "pre-wrap" }}>
                     <strong>Descrição:</strong> {material.description || "Sem Descrição"}
                   </Typography>
                 </Grid>
@@ -122,18 +127,8 @@ export default function WeekMaterialDetailsModal({
               { label: "Áudios", items: material.audios },
             ].map((section) =>
               section.items.length > 0 ? (
-                <Paper
-                  key={section.label}
-                  elevation={2}
-                  sx={{ p: 3, borderRadius: 2, bgcolor: "#fff" }}
-                >
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    color="primary"
-                    textAlign="center"
-                    mb={3}
-                  >
+                <Paper key={section.label} elevation={2} sx={{ p: 3, borderRadius: 2, bgcolor: "#fff" }}>
+                  <Typography variant="h6" fontWeight="bold" color="primary" textAlign="center" mb={3}>
                     {section.label}
                   </Typography>
 
@@ -152,12 +147,8 @@ export default function WeekMaterialDetailsModal({
                           <Typography variant="body1" sx={{ color: "#333" }}>
                             <strong>Título:</strong> {item.title || "Sem Título"}
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{ color: "#555", mt: 0.5 }}
-                          >
-                            <strong>Descrição:</strong>{" "}
-                            {item.description || "Sem Descrição"}
+                          <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                            <strong>Descrição:</strong> {item.description || "Sem Descrição"}
                           </Typography>
 
                           <Box
@@ -169,10 +160,7 @@ export default function WeekMaterialDetailsModal({
                               flexWrap: "wrap",
                             }}
                           >
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#555", wordBreak: "break-word" }}
-                            >
+                            <Typography variant="body2" sx={{ color: "#555", wordBreak: "break-word" }}>
                               <strong>URL:</strong> {item.url}
                             </Typography>
                             <IconButton

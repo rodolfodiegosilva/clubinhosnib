@@ -30,7 +30,7 @@ import MeditationForm from "./MeditationForm";
 import { AxiosError } from "axios";
 
 interface Props {
-  fromTemplatePage?: boolean; // true -> modo criação, false/undefined -> modo edição
+  fromTemplatePage?: boolean;
 }
 
 function isMonday(dateStr: string) {
@@ -49,10 +49,8 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  // Se estamos no modo edição, obtemos a meditação do Redux
   const meditationData = useSelector((state: RootState) => state.meditation.meditationData);
 
-  // Campos locais do formulário
   const [topic, setTopic] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState<"link" | "upload">("link");
@@ -63,14 +61,12 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
   const [days, setDays] = useState<DayItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Controle do snackbar (avisos de erro/sucesso)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success" as "success" | "error",
   });
 
-  // Se estivermos em modo criação, limpamos o Redux e os states locais
   useEffect(() => {
     if (fromTemplatePage) {
       dispatch(clearMeditationData());
@@ -86,7 +82,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
     }
   }, [fromTemplatePage, dispatch]);
 
-  // Se estivermos em modo edição, povoamos o formulário com dados do Redux
   useEffect(() => {
     if (!fromTemplatePage && meditationData) {
       setTopic(meditationData.topic);
@@ -102,7 +97,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
     }
   }, [fromTemplatePage, meditationData]);
 
-  // Lida com a alteração do tipo de conteúdo (link/upload)
   const handleFileTypeChange = (type: "link" | "upload") => {
     setFileType(type);
     if (type === "link") {
@@ -113,9 +107,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
     }
   };
 
-  // Lógica de salvar (tanto criação quanto edição)
   const handleSave = async () => {
-    // Validações básicas
     const hasEmptyFields = !topic || !startDate || !endDate;
     const isIncompleteDays = days.length !== 5;
     const hasNoLink = fileType === "link" && !url.trim();
@@ -169,15 +161,12 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
     setLoading(true);
 
     try {
-      // Montamos o FormData para envio
       const formData = new FormData();
 
-      // Se for upload, adicionamos o arquivo
       if (fileType === "upload" && file) {
         formData.append("file", file);
       }
 
-      // Cria o objeto "media"
       const media: MediaItem = {
         title: topic.trim(),
         description: `Meditação da semana de ${startDate} a ${endDate}`,
@@ -188,9 +177,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
         ...(file ? { originalName: file.name, size: file.size } : {}),
       };
 
-      // Cria o objeto "meditationData" para enviar
       const meditationDataPayload = {
-        // Se não for criação, passamos o ID do item no payload
         ...(fromTemplatePage ? {} : { id: meditationData?.id }),
         topic: topic.trim(),
         startDate,
@@ -206,7 +193,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
 
       formData.append("meditationData", JSON.stringify(meditationDataPayload));
 
-      // Decide qual endpoint chamar: POST (criação) ou PATCH (edição)
       if (fromTemplatePage) {
         await api.post("/meditations", formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -217,7 +203,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
         });
       }
 
-      // Atualiza rotas no Redux
       await dispatch(fetchRoutes());
 
       setSnackbar({
@@ -225,7 +210,7 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
         message: "Meditação salva com sucesso!",
         severity: "success",
       });
-      navigate("/meditacoes");
+      navigate("/adm/meditacoes");
     } catch (error) {
       let errMessage = "Erro desconhecido";
 
@@ -246,7 +231,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
     }
   };
 
-  // Layout
   return (
     <Box sx={{ p: 0, mt: fromTemplatePage ? 0 : 10, width: "95%", maxWidth: 1000, mx: "auto" }}>
       <Typography
@@ -342,7 +326,6 @@ export default function MeditationPageCreator({ fromTemplatePage }: Props) {
         </Stack>
       </Paper>
 
-      {/* Formulário de dias */}
       <MeditationForm days={days} onDaysChange={setDays} />
 
       <Box textAlign="center" mt={6}>
