@@ -23,7 +23,8 @@ import {
 import TeacherMeditationBanner from './TeacherMeditationBanner';
 import { motion } from 'framer-motion';
 import CommentsSection from './CommentsSection';
-import TrainingVideosSection from './TrainingVideosSection'; // Novo componente
+import TrainingVideosSection from './TrainingVideosSection';
+import DocumentsSection from './DocumentsSection'; // Novo componente
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoIcon from '@mui/icons-material/Info';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -59,7 +60,6 @@ const TeacherArea: React.FC = () => {
 
   return (
     <Container maxWidth={false} sx={{ width: '100%', mt: 10, mb: 8, mx: 'auto', bgcolor: '#f5f7fa' }}>
-      {/* Banners (inalterados) */}
       <Box
         sx={{
           display: 'flex',
@@ -84,7 +84,6 @@ const TeacherArea: React.FC = () => {
         )}
       </Box>
 
-      {/* Motivação Evangelística */}
       <Paper
         elevation={2}
         sx={{
@@ -95,11 +94,17 @@ const TeacherArea: React.FC = () => {
           borderRadius: 2,
         }}
       >
-        <Typography variant="h6" fontWeight="bold" color="#2196f3" gutterBottom>
-          ✨ Motivação para Evangelizar
-        </Typography>
-        <Typography variant="body1">{motivacaoEvangelismo}</Typography>
+        <Box textAlign="center">
+          <Typography variant="h6" fontWeight="bold" color="#2196f3" gutterBottom>
+            ✨ Motivação para Evangelizar
+          </Typography>
+          <Typography variant="body1" textAlign="center" >
+            {motivacaoEvangelismo}
+          </Typography>
+        </Box>
       </Paper>
+
+
 
       {/* Bloco Principal */}
       <Paper
@@ -117,12 +122,30 @@ const TeacherArea: React.FC = () => {
 
         {isAuthenticated ? (
           <Box>
-            <Typography variant="h6" gutterBottom color="#616161">
-              Olá, {user?.name || 'Professor'}!
-            </Typography>
-            <Typography variant="body1" gutterBottom color="#757575">
-              Bem-vindo à sua central de apoio pedagógico. Explore recursos atualizados semanalmente e enriqueça suas aulas!
-            </Typography>
+            <Box textAlign="center" mb={4}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                color="#616161"
+                sx={{ fontSize: { xs: '1.1rem', md: '1.4rem' } }}
+              >
+                Olá, {user?.name || 'Professor'}!
+              </Typography>
+
+              <Box maxWidth="800px" mx="auto">
+                <Typography
+                  variant="body1"
+                  gutterBottom
+                  color="#757575"
+                  sx={{
+                    fontSize: { xs: '0.95rem', md: '1.1rem' },
+                  }}
+                >
+                  Bem-vindo à sua central de apoio pedagógico. Explore recursos atualizados semanalmente e enriqueça suas aulas!
+                </Typography>
+              </Box>
+            </Box>
+
 
             {/* Seções em Grade */}
             <Grid container spacing={3} sx={{ mt: 4 }}>
@@ -229,7 +252,8 @@ const TeacherArea: React.FC = () => {
               </Grid>
             </Grid>
 
-            {/* Galeria de Ideias */}
+            <DocumentsSection />
+
             <Paper
               elevation={2}
               sx={{
@@ -251,10 +275,7 @@ const TeacherArea: React.FC = () => {
               </Typography>
             </Paper>
 
-            {/* Novo Componente de Vídeos de Capacitação */}
             <TrainingVideosSection />
-
-            {/* Mural de Comentários */}
             <CommentsSection />
           </Box>
         ) : (

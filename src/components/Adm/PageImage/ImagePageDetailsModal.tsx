@@ -13,7 +13,7 @@ import {
   Paper,
   Grid,
 } from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
+import { Close, ContentCopy } from "@mui/icons-material";
 import { ImagePageData } from "store/slices/image/imageSlice";
 
 interface ImagePageDetailsModalProps {
@@ -50,9 +50,25 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
         },
       }}
     >
-      <DialogTitle textAlign="center" fontWeight="bold" sx={{ fontSize: "1.5rem", color: "#333", padding: "5px" }}>
+      <DialogTitle
+        sx={{
+          fontSize: "1.5rem",
+          color: "#333",
+          padding: "5px 16px",
+          textAlign: "center",
+          position: "relative",
+        }}
+      >
         Detalhes da Página de Imagens
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ position: "absolute", top: 8, right: 8, color: "#777" }}
+        >
+          <Close />
+        </IconButton>
       </DialogTitle>
+
       <DialogContent sx={{ padding: "5px", overflowX: "auto" }}>
         {page && (
           <Stack spacing={3} sx={{ mt: 2, mx: "auto", maxWidth: "100%" }}>
@@ -70,42 +86,27 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
                   mt: 4,
                 }}
               >
-                <Grid
-                  container
-                  spacing={2}
-                  sx={{
-                    maxWidth: 800,
-                    width: "100%",
-                    px: { xs: 2, md: 0 },
-                  }}
-                >
+                <Grid container spacing={2} sx={{ maxWidth: 800, width: "100%", px: { xs: 2, md: 0 } }}>
                   <Grid item xs={12} md={6}>
                     <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
                       <strong>Título:</strong> {page.title || "Sem Título"}
                     </Typography>
                   </Grid>
-
                   <Grid item xs={12} md={6}>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: "#333", whiteSpace: "pre-wrap", wordBreak: "break-word" }}
-                    >
+                    <Typography variant="body1" sx={{ color: "#333", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                       <strong>Descrição:</strong> {page.description || "Sem Descrição"}
                     </Typography>
                   </Grid>
-
                   <Grid item xs={12} md={6}>
                     <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
                       <strong>Visibilidade:</strong> {page.public ? "Pública" : "Privada"}
                     </Typography>
                   </Grid>
-
                   <Grid item xs={12} md={6}>
                     <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
                       <strong>Criado em:</strong> {formatDate(page.createdAt)}
                     </Typography>
                   </Grid>
-
                   <Grid item xs={12} md={6}>
                     <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
                       <strong>Atualizado em:</strong> {formatDate(page.updatedAt)}
@@ -113,21 +114,12 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
                   </Grid>
                 </Grid>
               </Box>
-
             </Paper>
 
             <Divider sx={{ my: 2 }} />
 
             {page.sections.length > 0 && (
-              <Box
-                sx={{
-                  width: {
-                    xs: "98%", // para telas pequenas (mobile)
-                    md: "95%", // para telas médias em diante (desktop/tablet)
-                  },
-                  mx: "auto", // centraliza horizontalmente
-                }}
-              >
+              <Box sx={{ width: { xs: "98%", md: "95%" }, mx: "auto" }}>
                 <Typography variant="h6" fontWeight="bold" color="primary" textAlign="center" mb={2}>
                   Seções
                 </Typography>
@@ -157,42 +149,25 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
                           </Typography>
 
                           <Stack spacing={1.5}>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                color: "#333",
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                              }}
-                            >
+                            <Typography variant="body1" sx={{ color: "#333", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                               <strong>Descrição:</strong> {section.description || "Sem Descrição"}
                             </Typography>
-
-                            <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
+                            <Typography variant="body1" sx={{ color: "#333" }}>
                               <strong>Visibilidade:</strong> {section.public ? "Pública" : "Privada"}
                             </Typography>
-
-                            <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
+                            <Typography variant="body1" sx={{ color: "#333" }}>
                               <strong>Criado em:</strong> {formatDate(section.createdAt)}
                             </Typography>
-
-                            <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
+                            <Typography variant="body1" sx={{ color: "#333" }}>
                               <strong>Atualizado em:</strong> {formatDate(section.updatedAt)}
                             </Typography>
                           </Stack>
 
                           {section.mediaItems.length > 0 && (
                             <Box mt={3}>
-                              <Typography
-                                variant="subtitle1"
-                                fontWeight="bold"
-                                color="primary"
-                                textAlign="center"
-                                mb={2}
-                              >
+                              <Typography variant="subtitle1" fontWeight="bold" color="primary" textAlign="center" mb={2}>
                                 Itens de Mídia
                               </Typography>
-
                               <Stack spacing={2}>
                                 {section.mediaItems.map((item) => (
                                   <Box
@@ -207,14 +182,9 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
                                     <Typography variant="body1" sx={{ color: "#333", wordBreak: "break-word" }}>
                                       <strong>Título:</strong> {item.title || item.originalName || "Sem Título"}
                                     </Typography>
-
-                                    <Typography
-                                      variant="body2"
-                                      sx={{ color: "#555", mt: 0.5, wordBreak: "break-word" }}
-                                    >
+                                    <Typography variant="body2" sx={{ color: "#555", mt: 0.5, wordBreak: "break-word" }}>
                                       <strong>Descrição:</strong> {item.description || "Sem Descrição"}
                                     </Typography>
-
                                     <Box
                                       sx={{
                                         display: "flex",
@@ -251,6 +221,7 @@ export default function ImagePageDetailsModal({ page, open, onClose }: ImagePage
           </Stack>
         )}
       </DialogContent>
+
       <DialogActions sx={{ justifyContent: "center", padding: "5px" }}>
         <Button variant="outlined" onClick={onClose} sx={{ minWidth: 100 }}>
           Fechar

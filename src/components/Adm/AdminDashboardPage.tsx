@@ -46,6 +46,11 @@ const cardData = [
     description: "Gerencie comentários e feedbacks dos usuários.",
     icon: <EventNote fontSize="large" color="primary" />,
     path: "/adm/comentarios",
+  },  {
+    title: "Documentos",
+    description: "Gerencie documentos que os professores podem acessar.",
+    icon: <EventNote fontSize="large" color="primary" />,
+    path: "/adm/documentos",
   },
   {
     title: "Criar Página",

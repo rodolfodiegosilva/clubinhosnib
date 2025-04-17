@@ -35,6 +35,7 @@ import WeekMaterialListPage from "components/Adm/PageWeekMaterial/WeekMaterialLi
 import ImagePageListPage from "components/Adm/PageImage/ImagePageListPage";
 import VideoPageListPage from "components/Adm/PageVideos/VideoPageListPage";
 import CommentsListPage from "components/Adm/PageComments/CommentsListPage";
+import DocumentManager from "components/Adm/PageDocuments/DocumentManager";
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatchType>();
@@ -92,6 +93,8 @@ const App: React.FC = () => {
               <Route index element={<AdminDashboardPage />} />
               <Route path="meditacoes" element={<MeditationListPage />} />
               <Route path="comentarios" element={<CommentsListPage />} />
+              
+              <Route path="documentos" element={<DocumentManager />} />
 
               <Route path="paginas-materiais-semanais" element={<WeekMaterialListPage />} />
               <Route path="paginas-fotos" element={<ImagePageListPage />} />              
