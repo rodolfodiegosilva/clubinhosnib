@@ -20,44 +20,40 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import api from "../../../config/axiosConfig";
 import { fetchRoutes } from "store/slices/route/routeSlice";
 import { RootState, AppDispatch } from "store/slices";
-import { setWeekMaterialData, WeekMaterialPageData, WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import { setWeekMaterialData, WeekMaterialPageData } from "store/slices/week-material/weekMaterialSlice";
 import WeekDocumentViewer from "./WeekDocumentViewer";
 import WeekImageGalleryView from "./WeekImageGalleryView";
 import WeekAudioPlayerView from "./WeekAudioPlayerView";
 import WeekVideoPlayerView from "./WeekVideoPlayerView";
 import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
+import { MediaItem } from "store/slices/types";
 
-// Define props for WeekMaterialsPageView
 interface WeekMaterialsPageViewProps {
   idToFetch: string;
 }
-
-// Define the props for each component type
 interface VideoProps {
-  video: WeekMediaItem;
+  video: MediaItem;
 }
-
 interface DocumentProps {
-  document: WeekMediaItem;
+  document: MediaItem;
 }
 
 interface ImageProps {
-  image: WeekMediaItem;
+  image: MediaItem;
 }
 
 interface AudioProps {
-  audio: WeekMediaItem;
+  audio: MediaItem;
 }
 
-// Define the type for each media type entry
 interface MediaType {
   label: string;
-  items: WeekMediaItem[];
+  items: MediaItem[];
   component:
-    | React.ComponentType<VideoProps>
-    | React.ComponentType<DocumentProps>
-    | React.ComponentType<ImageProps>
-    | React.ComponentType<AudioProps>;
+  | React.ComponentType<VideoProps>
+  | React.ComponentType<DocumentProps>
+  | React.ComponentType<ImageProps>
+  | React.ComponentType<AudioProps>;
   propName: "video" | "document" | "image" | "audio";
 }
 
@@ -157,21 +153,18 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
     );
   }
 
-  // Define media types with proper typing
   const mediaTypes = [
-    { label: "🎬 Vídeos", items: videos || [], component: WeekVideoPlayerView, propName: "video" as const },
-    { label: "📄 Documentos", items: documents || [], component: WeekDocumentViewer, propName: "document" as const },
-    { label: "🖼️ Imagens", items: images || [], component: WeekImageGalleryView, propName: "image" as const },
-    { label: "🎧 Áudios", items: audios || [], component: WeekAudioPlayerView, propName: "audio" as const },
+    { label: isMobile ? "🎬" : "🎬 Vídeos", items: videos || [], component: WeekVideoPlayerView, propName: "video" as const },
+    { label: isMobile ? "📄" : "📄 Documentos", items: documents || [], component: WeekDocumentViewer, propName: "document" as const },
+    { label: isMobile ? "🖼️" : "🖼️ Imagens", items: images || [], component: WeekImageGalleryView, propName: "image" as const },
+    { label: isMobile ? "🎧" : "🎧 Áudios", items: audios || [], component: WeekAudioPlayerView, propName: "audio" as const },
   ];
 
-  // Filter media types to only include those with items
   const filteredMediaTypes: MediaType[] = mediaTypes.filter(
     (type) => type.items.length > 0
   );
 
-  // Function to render the correct component with the correct prop
-  const renderMediaComponent = (type: MediaType, item: WeekMediaItem) => {
+  const renderMediaComponent = (type: MediaType, item: MediaItem) => {
     switch (type.propName) {
       case "video":
         return <WeekVideoPlayerView video={item} />;
@@ -189,7 +182,7 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
   return (
     <Box
       sx={{
-        minHeight: "100vh", // Ensure the page takes up the full viewport height
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)",
@@ -200,7 +193,6 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
       }}
     >
       <Container maxWidth="lg" sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,7 +221,7 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
               variant="body1"
               mt={2}
               color="text.secondary"
-              textAlign="center" // Center the description
+              textAlign="center"
               maxWidth="800px"
               mx="auto"
               sx={{ px: { xs: 2, md: 0 } }}
@@ -239,7 +231,6 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
           </Box>
         </motion.div>
 
-        {/* Tabs for Media Types */}
         <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
           <Tabs
             value={activeTab}
@@ -269,7 +260,6 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
           </Tabs>
         </Box>
 
-        {/* Media Content */}
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           {filteredMediaTypes.map((type, index) => (
             <Box key={index} hidden={activeTab !== index} role="tabpanel">
@@ -288,10 +278,10 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
                         md: type.label.includes("Imagens") ? "repeat(3, 1fr)" : "repeat(2, 1fr)",
                       },
                       gap: 3,
-                      minHeight: "50vh", // Ensure the grid takes up space
+                      minHeight: "50vh",
                     }}
                   >
-                    {type.items.map((item: WeekMediaItem) => (
+                    {type.items.map((item: MediaItem) => (
                       <motion.div
                         key={item.id}
                         whileHover={{ scale: 1.03 }}
@@ -321,18 +311,17 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
           ))}
         </Box>
 
-        {/* Floating Action Buttons for Admins */}
         {isAdmin && (
           <Zoom in={true}>
             <Box
               sx={{
                 position: "fixed",
-                bottom: 80, // Adjusted to be above the footer (assuming footer height is ~64px)
+                bottom: 80,
                 right: 16,
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                zIndex: 1000, // Ensure FABs are above other elements
+                zIndex: 1000,
               }}
             >
               <Fab
@@ -357,7 +346,6 @@ export default function WeekMaterialsPageView({ idToFetch }: WeekMaterialsPageVi
           </Zoom>
         )}
 
-        {/* Delete Confirmation Dialog */}
         <DeleteConfirmationDialog
           open={deleteConfirmOpen}
           onClose={() => setDeleteConfirmOpen(false)}

@@ -19,13 +19,14 @@ import InforamtivePageCreator from "../Templates/InforamtivePageCreator/Inforamt
 import EventPageCreator from "../Templates/EventPageCreator/EventPageCreator";
 import MeditationPageCreator from "../Templates/MeditationPageCreator/MeditationPageCreator";
 import WeekMaterialPageCreator from "../Templates/WeekMaterialPageCreator/WeekMaterialPageCreator";
+import { IdeasMaterialPageCreator } from "../Templates/IdeasMaterialPageCreator/IdeasMaterialPageCreator";
 
 enum Options {
   WEEK_MATERIALS = "Adicionar Materiais da Semana",
   MEDITATION = "Adicionar meditação da Semana",
   GALLERY = "Adicionar galeria de Fotos",
   VIDEOS = "Adicionar galeria de Videos",
-  INFORMATIVE = "Adicionar pagina Informativa",
+  IDEAS = "Adicionar uma pagina de Ideias",
   EVENTS = "Adicionar pagina de Eventos",
 }
 
@@ -33,7 +34,7 @@ const componentMap: Record<keyof typeof Options, () => ReactElement> = {
   GALLERY: () => <PhotoPageCreator fromTemplatePage={true} />,
   VIDEOS: () => <VideoPageCreator fromTemplatePage={true} />,
   MEDITATION: () => <MeditationPageCreator fromTemplatePage={true} />,
-  INFORMATIVE: () => <InforamtivePageCreator />,
+  IDEAS: () => <IdeasMaterialPageCreator fromTemplatePage={true}/>,
   WEEK_MATERIALS: () => <WeekMaterialPageCreator fromTemplatePage={true} />,
   EVENTS: () => <EventPageCreator />,
 };
@@ -66,8 +67,6 @@ export default function SelecPageTemplate() {
         textAlign: "center",
       }}
     >
-
-
       <Typography variant="h4" fontWeight="bold" gutterBottom  sx={{ mt: { xs: 0, md: 0 }, mb: { xs: 1, md: 3 }, fontSize: { xs: "1.5rem", md: "2.4rem" } }}>
         Escolha um Modelo
       </Typography>

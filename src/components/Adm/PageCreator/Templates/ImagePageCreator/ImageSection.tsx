@@ -10,7 +10,7 @@ import {
   Switch,
 } from "@mui/material";
 import ImageItem from "./ImageItem";
-import { MediaItem } from "../../../../../store/slices/image/imageSlice";
+import { MediaItem } from "store/slices/types";
 
 interface ImageSectionProps {
   mediaItems: MediaItem[];
@@ -44,12 +44,12 @@ export default function ImageSection({
     <Container maxWidth={false} sx={{ maxWidth: "95% !important", p: 0 }}>
       <Card sx={{ mb: 4, p: 2 }}>
         <Grid container spacing={2}>
-          {/* Área da Imagem (esquerda) */}
+          {/* Área da Imagem */}
           <Grid item xs={12} md={6}>
             <ImageItem mediaItems={mediaItems} onRemoveMedia={onRemoveMedia} />
           </Grid>
 
-          {/* Área de Texto e Ações (direita) */}
+          {/* Área de Texto */}
           <Grid item xs={12} md={6}>
             <CardContent sx={{ p: 0 }}>
               <TextField

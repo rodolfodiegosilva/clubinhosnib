@@ -174,7 +174,7 @@ export default function PageGalleryView({ idToFetch }: PageGalleryProps) {
               <Fab
                 color="warning"
                 size="medium"
-                onClick={() => navigate("/adm/editar-pagina-fotos")}
+                onClick={() => navigate("/adm/editar-pagina-imagens")}
                 disabled={isDeleting}
               >
                 <EditIcon />

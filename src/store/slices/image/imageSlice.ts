@@ -1,22 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RouteData } from "../route/routeSlice";
-
-export interface MediaItem {
-  id?: string;
-  size?: number;
-  file?: File;
-  mediaType?: string;  
-  originalName?: string;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
-  title?: string;
-  description?: string;
-  type: "upload" | "link";
-  isLocalFile: boolean;
-  url: string;  
-  platform?: "ANY" | "googledrive" | "onedrive" | "dropbox";
-  
-}
+import { MediaItem } from "../types";
 
 export interface SectionData {
   id?: string;

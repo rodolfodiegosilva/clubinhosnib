@@ -1,4 +1,3 @@
-// Refatorado com edição, validações, preview, confirmação de remoção e suporte a todas plataformas
 import {
   Box,
   TextField,
@@ -18,22 +17,29 @@ import {
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import { useState } from "react";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
 import { validateMediaURL } from "utils/validateMediaURL";
+import {
+  MediaItem,
+  MediaType,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface Props {
-  videos: WeekMediaItem[];
-  setVideos: (videos: WeekMediaItem[]) => void;
+  videos: MediaItem[];
+  setVideos: (videos: MediaItem[]) => void;
 }
 
 export default function WeekVideos({ videos, setVideos }: Props) {
-  const [newVideo, setNewVideo] = useState<WeekMediaItem>({
+  const [newVideo, setNewVideo] = useState<MediaItem>({
     title: "",
     description: "",
-    type: "link",
-    platform: "youtube",
+    mediaType: MediaType.VIDEO,
+    uploadType: MediaUploadType.LINK,
     url: "",
+    platformType: MediaPlatform.YOUTUBE,
   });
+
   const [fileName, setFileName] = useState<string>("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
@@ -53,14 +59,17 @@ export default function WeekVideos({ videos, setVideos }: Props) {
   };
 
   const handleAddOrUpdate = () => {
-    const isValid = newVideo.type === "upload" || validateMediaURL(newVideo.url, newVideo.platform);
+    const isValid =
+      newVideo.uploadType === MediaUploadType.UPLOAD ||
+      validateMediaURL(newVideo.url, newVideo.platformType);
     const hasError =
-      !newVideo.title || !newVideo.description || !newVideo.url || (newVideo.type === "link" && !isValid);
+      !newVideo.title || !newVideo.description || !newVideo.url ||
+      (newVideo.uploadType === MediaUploadType.LINK && !isValid);
 
     setErrors({
       title: !newVideo.title,
       description: !newVideo.description,
-      url: !newVideo.url || (newVideo.type === "link" && !isValid),
+      url: !newVideo.url || (newVideo.uploadType === MediaUploadType.LINK && !isValid),
     });
 
     if (hasError) return;
@@ -74,7 +83,14 @@ export default function WeekVideos({ videos, setVideos }: Props) {
     }
 
     setVideos(updatedList);
-    setNewVideo({ title: "", description: "", type: "link", platform: "youtube", url: "" });
+    setNewVideo({
+      title: "",
+      description: "",
+      mediaType: MediaType.VIDEO,
+      uploadType: MediaUploadType.LINK,
+      url: "",
+      platformType: MediaPlatform.YOUTUBE,
+    });
     setFileName("");
   };
 
@@ -119,43 +135,44 @@ export default function WeekVideos({ videos, setVideos }: Props) {
           <FormControl fullWidth>
             <InputLabel>Tipo</InputLabel>
             <Select
-              value={newVideo.type}
               label="Tipo"
-              onChange={(e) =>
-                setNewVideo((prev) => ({
-                  ...prev,
-                  type: e.target.value as "upload" | "link",
-                  platform: e.target.value === "link" ? "youtube" : undefined,
+              value={newVideo.uploadType}
+              onChange={(e) => {
+                const uploadType = e.target.value as MediaUploadType;
+                setNewVideo({
+                  ...newVideo,
+                  uploadType,
+                  platformType: uploadType === MediaUploadType.LINK ? MediaPlatform.YOUTUBE : undefined,
                   url: "",
                   file: undefined,
-                }))
-              }
+                });
+              }}
             >
-              <MenuItem value="link">Link</MenuItem>
-              <MenuItem value="upload">Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {newVideo.type === "link" && (
+        {newVideo.uploadType === MediaUploadType.LINK && (
           <>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Plataforma</InputLabel>
                 <Select
-                  value={newVideo.platform || ""}
                   label="Plataforma"
+                  value={newVideo.platformType || ""}
                   onChange={(e) =>
                     setNewVideo((prev) => ({
                       ...prev,
-                      platform: e.target.value as WeekMediaItem["platform"],
+                      platformType: e.target.value as MediaPlatform,
                     }))
                   }
                 >
-                  <MenuItem value="youtube">YouTube</MenuItem>
-                  <MenuItem value="googledrive">Google Drive</MenuItem>
-                  <MenuItem value="onedrive">OneDrive</MenuItem>
-                  <MenuItem value="dropbox">Dropbox</MenuItem>
+                  <MenuItem value={MediaPlatform.YOUTUBE}>YouTube</MenuItem>
+                  <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                  <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                  <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -173,7 +190,7 @@ export default function WeekVideos({ videos, setVideos }: Props) {
           </>
         )}
 
-        {newVideo.type === "upload" && (
+        {newVideo.uploadType === MediaUploadType.UPLOAD && (
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload de Vídeo
@@ -200,7 +217,7 @@ export default function WeekVideos({ videos, setVideos }: Props) {
             <Box border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{video.title}</Typography>
               <Typography variant="body2" mb={1}>{video.description}</Typography>
-              {video.type === "link" ? (
+              {video.uploadType === MediaUploadType.LINK ? (
                 <Box sx={{ aspectRatio: '16/9' }}>
                   <iframe
                     src={video.url}

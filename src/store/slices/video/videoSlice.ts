@@ -1,21 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RouteData } from "../route/routeSlice";
-
-export interface VideoItem {
-  id?: string;
-  title: string;
-  description: string;
-  type: "upload" | "link";
-  platform?: "youtube" | "googledrive" | "onedrive" | "ANY";
-  url?: string;
-  file?: File | any;
-  isLocalFile?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  mediaType?: string;
-  originalName?: string; // Adicionado
-  size?: number; // Adicionado
-}
+import { MediaItem } from "../types";
 
 export interface VideoPageData {
   id?: string;
@@ -24,7 +9,7 @@ export interface VideoPageData {
   description: string;
   createdAt?: string;
   updatedAt?: string;
-  videos: VideoItem[];
+  videos: MediaItem[];
   route?: RouteData;
 }
 

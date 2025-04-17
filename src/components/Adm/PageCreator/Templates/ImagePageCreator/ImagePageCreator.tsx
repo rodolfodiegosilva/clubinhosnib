@@ -1,4 +1,3 @@
-// ImagePageCreator.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,10 +19,15 @@ import {
 } from "@mui/material";
 import {
   ImagePageData,
-  MediaItem,
   SectionData,
 } from "../../../../../store/slices/image/imageSlice";
 import ImageSection from "./ImageSection";
+import {
+  MediaItem,
+  MediaPlatform,
+  MediaType,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface ImageProps {
   fromTemplatePage?: boolean;
@@ -53,7 +57,7 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
   const [currentEditingIndex, setCurrentEditingIndex] = useState<number | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState("");
-  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => { });
+  const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => {});
   const [isSaving, setIsSaving] = useState(false);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
@@ -105,29 +109,26 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         const mediaItems: MediaItem[] = section.mediaItems.map((media, mediaIndex) => {
           const fieldKey = `file_sec${sectionIndex}_mid${mediaIndex}`;
 
-          // Adiciona o arquivo à FormData se for local
           if (media.isLocalFile && media.file) {
             formData.append(fieldKey, media.file);
           }
 
-          const baseMedia = {
+          const baseMedia: MediaItem = {
             isLocalFile: media.isLocalFile,
             url: media.url || "",
-            type: media.type,
+            uploadType: media.uploadType || MediaUploadType.UPLOAD,
+            mediaType: MediaType.IMAGE,
             title: media.title || "",
             description: media.description || "",
-            platform: media.platform,
+            platformType: media.platformType || MediaPlatform.ANY,
             originalName: media.originalName,
             size: media.size,
-            mediaType: "image",
-            file: media.file,
             fieldKey,
           };
 
-          // Se for uma criação (do template) e não tiver id, omite o id
           return fromTemplatePage && !media.id
-            ? { ...baseMedia }
-            : { ...baseMedia, id: media.id }; // Inclui o id na edição
+            ? baseMedia
+            : { ...baseMedia, id: media.id };
         });
 
         const baseSection = {
@@ -137,15 +138,13 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
           mediaItems,
         };
 
-        // Se for criação (do template) e não tiver id, omite o id
         return fromTemplatePage && !section.id
-          ? { ...baseSection }
-          : { ...baseSection, id: section.id }; // Inclui o id da seção na edição
+          ? baseSection
+          : { ...baseSection, id: section.id };
       });
 
       const payload: ImagePageData = {
-        ...((fromTemplatePage === false || fromTemplatePage === undefined) && imageData?.id && { id: imageData.id }), // Inclui o id se for edição e se o id existir
-
+        ...((fromTemplatePage === false || fromTemplatePage === undefined) && imageData?.id && { id: imageData.id }),
         public: isPublic,
         title,
         description,
@@ -156,11 +155,11 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
 
       const response = fromTemplatePage
         ? await api.post("/image-pages", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
+            headers: { "Content-Type": "multipart/form-data" },
+          })
         : await api.patch(`/image-pages/${imageData?.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+            headers: { "Content-Type": "multipart/form-data" },
+          });
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
@@ -171,8 +170,6 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
       setIsSaving(false);
     }
   };
-
-
 
   const openModal = (index: number) => {
     setCurrentEditingIndex(index);
@@ -206,9 +203,9 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         prev.map((section, i) =>
           i === sectionIndex
             ? {
-              ...section,
-              mediaItems: section.mediaItems.filter((_, j) => j !== mediaIndex),
-            }
+                ...section,
+                mediaItems: section.mediaItems.filter((_, j) => j !== mediaIndex),
+              }
             : section
         )
       )
@@ -262,7 +259,6 @@ export default function ImagePageCreator({ fromTemplatePage }: ImageProps) {
         px: 0,
       }}
     >
-
       <Typography variant="h4" fontWeight="bold" mb={3} textAlign="center">
         {fromTemplatePage ? "Criar Galeria de Fotos" : "Editar Galeria de Fotos"}
       </Typography>

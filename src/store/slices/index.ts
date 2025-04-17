@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+
 import imageReducer from './image/imageSlice';
 import authReducer from './auth/authSlice';
 import routesReducer from './route/routeSlice';
@@ -9,6 +10,8 @@ import meditationReducer from './meditation/meditationSlice';
 import weekMaterialReducer from './week-material/weekMaterialSlice';
 import eventsReducer from './events/eventsSlice';
 import commentsReducer from './comment/commentsSlice';
+import documentReducer from './documents/documentSlice';
+import ideasReducer from './ideas/ideasSlice';
 
 const authPersistConfig = {
   key: 'auth',
@@ -25,6 +28,8 @@ const rootReducer = combineReducers({
   weekMaterial: weekMaterialReducer,
   events: eventsReducer,
   comments: commentsReducer,
+  document: documentReducer,
+  ideas: ideasReducer,
 });
 
 export const store = configureStore({

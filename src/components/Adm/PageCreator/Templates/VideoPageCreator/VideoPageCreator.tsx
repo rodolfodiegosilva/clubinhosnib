@@ -21,20 +21,23 @@ import {
 import api from "../../../../../config/axiosConfig";
 import { AppDispatch, RootState } from "../../../../../store/slices";
 import { fetchRoutes } from "../../../../../store/slices/route/routeSlice";
-import { clearVideoData, VideoItem } from "../../../../../store/slices/video/videoSlice";
+import { clearVideoData } from "../../../../../store/slices/video/videoSlice";
 import { validateMediaURL } from "../../../../../utils/validateMediaURL";
 import VideoForm from "./VideoForm";
 import VideoList from "./VideoList";
+import {
+  MediaItem,
+  MediaType,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface VideoProps {
   fromTemplatePage?: boolean;
 }
 
-function videoToEditable(video: VideoItem): VideoItem {
-  return {
-    ...video,
-    file: undefined, // Remove o arquivo para evitar reenvio no modo de edição
-  };
+function videoToEditable(video: MediaItem): MediaItem {
+  return { ...video, file: undefined };
 }
 
 export default function VideoPageCreator({ fromTemplatePage = false }: VideoProps) {
@@ -42,19 +45,18 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
   const dispatch = useDispatch<AppDispatch>();
   const videoData = useSelector((state: RootState) => state.video.videoData);
 
-  // Estados principais
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [newVideo, setNewVideo] = useState<VideoItem>({
+  const [videos, setVideos] = useState<MediaItem[]>([]);
+  const [newVideo, setNewVideo] = useState<MediaItem>({
     title: "",
     description: "",
-    type: "link",
-    platform: "youtube",
+    uploadType: MediaUploadType.LINK,
+    platformType: MediaPlatform.YOUTUBE,
     url: "",
     isLocalFile: false,
-    mediaType: "video",
+    mediaType: MediaType.VIDEO,
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [errors, setErrors] = useState({
@@ -69,18 +71,16 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
-  // Estado para o modal de confirmação de exclusão
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [videoToDeleteIndex, setVideoToDeleteIndex] = useState<number | null>(null);
-  // Estado para indicar progresso de upload
   const [uploadProgress, setUploadProgress] = useState<Record<string, boolean>>({});
 
-  // Carregamento inicial
   useEffect(() => {
     if (!videoData && !fromTemplatePage) {
       navigate("/feed-clubinho");
       return;
     }
+
     if (fromTemplatePage) {
       dispatch(clearVideoData());
       setTitle("");
@@ -95,49 +95,25 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
     }
   }, [fromTemplatePage, videoData, dispatch, navigate]);
 
-  // Verificar se todos os uploads estão completos
-  const areUploadsComplete = () => {
-    return Object.values(uploadProgress).every((isComplete) => isComplete !== false);
-  };
+  const areUploadsComplete = () => Object.values(uploadProgress).every((v) => v !== false);
 
-  // Validação
   const validate = (): boolean => {
-    if (!title.trim()) {
-      setErrors((prev) => ({ ...prev, pageTitle: true }));
-      setSnackbarMessage("O título da galeria é obrigatório.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return false;
-    }
-    if (!description.trim()) {
-      setErrors((prev) => ({ ...prev, pageDescription: true }));
-      setSnackbarMessage("A descrição da galeria é obrigatória.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return false;
-    }
-    if (videos.length === 0) {
-      setSnackbarMessage("Adicione pelo menos um vídeo.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return false;
-    }
-    if (!fromTemplatePage && !videoData?.id) {
-      setSnackbarMessage("ID da página é obrigatório no modo de edição.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return false;
-    }
-    if (!areUploadsComplete()) {
-      setSnackbarMessage("Aguarde o upload de todos os vídeos antes de salvar.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return false;
-    }
+    if (!title.trim()) return showError("O título da galeria é obrigatório.", "pageTitle");
+    if (!description.trim()) return showError("A descrição da galeria é obrigatória.", "pageDescription");
+    if (videos.length === 0) return showError("Adicione pelo menos um vídeo.");
+    if (!fromTemplatePage && !videoData?.id) return showError("ID da página é obrigatório no modo de edição.");
+    if (!areUploadsComplete()) return showError("Aguarde o upload de todos os vídeos antes de salvar.");
     return true;
   };
 
-  // Função para salvar a página
+  const showError = (msg: string, field?: keyof typeof errors) => {
+    if (field) setErrors((prev) => ({ ...prev, [field]: true }));
+    setSnackbarMessage(msg);
+    setSnackbarSeverity("error");
+    setSnackbarOpen(true);
+    return false;
+  };
+
   const handleSavePage = async () => {
     if (!validate()) return;
 
@@ -147,51 +123,40 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
 
       const videosPayload = videos.map((video, index) => {
         const fieldKey = `video-${index}`;
-        // Anexar arquivo apenas para novos vídeos do tipo upload
-        if (video.type === "upload" && video.file && !video.id) {
+        if (video.uploadType === MediaUploadType.UPLOAD && video.file && !video.id) {
           formData.append(fieldKey, video.file);
         }
 
-        const baseVideo = {
+        return {
+          id: !fromTemplatePage && video.id ? video.id : undefined,
           title: video.title,
           description: video.description,
-          type: video.type,
-          isLocalFile: video.type === "upload",
-          url: video.type === "link" || (video.type === "upload" && video.id) ? video.url : undefined,
-          platform: video.type === "link" ? video.platform : undefined,
+          uploadType: video.uploadType,
+          isLocalFile: video.uploadType === MediaUploadType.UPLOAD,
+          url:
+            video.uploadType === MediaUploadType.LINK || (video.uploadType === MediaUploadType.UPLOAD && video.id)
+              ? video.url
+              : undefined,
+          platformType: video.uploadType === MediaUploadType.LINK ? video.platformType : undefined,
           originalName: video.file?.name,
-          mediaType: "video",
-          fieldKey: video.type === "upload" && !video.id ? fieldKey : undefined,
+          mediaType: MediaType.VIDEO,
+          fieldKey: video.uploadType === MediaUploadType.UPLOAD && !video.id ? fieldKey : undefined,
         };
-
-        // Incluir id para vídeos existentes no modo de edição
-        return !fromTemplatePage && video.id ? { ...baseVideo, id: video.id } : baseVideo;
       });
 
-      const payload = fromTemplatePage
-        ? {
-          public: isPublic,
-          title,
-          description,
-          videos: videosPayload,
-        }
-        : {
-          id: videoData!.id, // Garantir que o id da página esteja presente
-          public: isPublic,
-          title,
-          description,
-          videos: videosPayload,
-        };
+      const payload = {
+        ...(fromTemplatePage ? {} : { id: videoData?.id }),
+        public: isPublic,
+        title,
+        description,
+        videos: videosPayload,
+      };
 
       formData.append("videosPageData", JSON.stringify(payload));
 
       const response = fromTemplatePage
-        ? await api.post("/video-pages", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        : await api.patch(`/video-pages/${videoData!.id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        ? await api.post("/video-pages", formData, { headers: { "Content-Type": "multipart/form-data" } })
+        : await api.patch(`/video-pages/${videoData!.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } });
 
       await dispatch(fetchRoutes());
       navigate(`/${response.data.route.path}`);
@@ -200,92 +165,70 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Erro ao salvar página", error);
-      setSnackbarMessage("Erro ao salvar a página. Tente novamente.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      showError("Erro ao salvar a página. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Função para adicionar ou atualizar vídeo
   const handleAddVideo = () => {
     const hasError =
-      !newVideo.title ||
-      !newVideo.description ||
-      (newVideo.type === "link" && !newVideo.url) ||
-      (newVideo.type === "upload" && !newVideo.file && editingIndex === null);
+      !newVideo.title || !newVideo.description ||
+      (newVideo.uploadType === MediaUploadType.LINK && !newVideo.url) ||
+      (newVideo.uploadType === MediaUploadType.UPLOAD && !newVideo.file && editingIndex === null);
+
     const isValidURL =
-      newVideo.type === "link" && newVideo.platform
-        ? validateMediaURL(newVideo.url || "", newVideo.platform)
+      newVideo.uploadType === MediaUploadType.LINK && newVideo.platformType
+        ? validateMediaURL(newVideo.url, newVideo.platformType)
         : true;
 
     setErrors((prev) => ({
       ...prev,
       newVideoTitle: !newVideo.title,
       newVideoDescription: !newVideo.description,
-      newVideoSrc:
-        newVideo.type === "link" ? !newVideo.url : !newVideo.file && editingIndex === null,
-      newVideoURL: newVideo.type === "link" && !isValidURL,
+      newVideoSrc: newVideo.uploadType === MediaUploadType.LINK ? !newVideo.url : !newVideo.file && editingIndex === null,
+      newVideoURL: newVideo.uploadType === MediaUploadType.LINK && !isValidURL,
     }));
 
     if (hasError || !isValidURL) {
-      if (!isValidURL) {
-        setSnackbarMessage("URL inválida para a plataforma selecionada.");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-      }
+      if (!isValidURL) showError("URL inválida para a plataforma selecionada.");
       return;
     }
 
-    const videoToAdd: VideoItem = {
+    const updatedVideo: MediaItem = {
       ...newVideo,
       id: editingIndex !== null ? videos[editingIndex].id : undefined,
-      isLocalFile: newVideo.type === "upload",
-      mediaType: "video",
+      isLocalFile: newVideo.uploadType === MediaUploadType.UPLOAD,
+      mediaType: MediaType.VIDEO,
     };
 
     if (editingIndex !== null) {
-      setVideos((prev) => prev.map((v, i) => (i === editingIndex ? videoToAdd : v)));
+      setVideos((prev) => prev.map((v, i) => (i === editingIndex ? updatedVideo : v)));
       setEditingIndex(null);
-      setSnackbarMessage("Vídeo atualizado com sucesso!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
     } else {
-      setVideos([...videos, videoToAdd]);
+      setVideos((prev) => [...prev, updatedVideo]);
     }
 
-    if (newVideo.type === "upload" && newVideo.file) {
-      setUploadProgress((prev) => ({
-        ...prev,
-        [newVideo.file.name]: true,
-      }));
+    if (newVideo.uploadType === MediaUploadType.UPLOAD && newVideo.file) {
+      setUploadProgress((prev) => ({ ...prev, [newVideo.file!.name]: true }));
     }
 
     setNewVideo({
       title: "",
       description: "",
-      type: "link",
-      platform: "youtube",
+      uploadType: MediaUploadType.LINK,
+      platformType: MediaPlatform.YOUTUBE,
       url: "",
       isLocalFile: false,
-      mediaType: "video",
+      mediaType: MediaType.VIDEO,
     });
   };
 
-  // Função para abrir o modal de confirmação de exclusão
   const handleOpenDeleteDialog = (index: number) => {
     setVideoToDeleteIndex(index);
     setDeleteDialogOpen(true);
   };
 
-  // Função para fechar o modal de exclusão
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setVideoToDeleteIndex(null);
-  };
-
-  // Função para confirmar a exclusão
   const handleConfirmDelete = () => {
     if (videoToDeleteIndex !== null) {
       setVideos((prev) => prev.filter((_, i) => i !== videoToDeleteIndex));
@@ -294,18 +237,19 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         setNewVideo({
           title: "",
           description: "",
-          type: "link",
-          platform: "youtube",
+          uploadType: MediaUploadType.LINK,
+          platformType: MediaPlatform.YOUTUBE,
           url: "",
           isLocalFile: false,
-          mediaType: "video",
+          mediaType: MediaType.VIDEO,
         });
       }
       setSnackbarMessage("Vídeo removido com sucesso!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     }
-    handleCloseDeleteDialog();
+    setDeleteDialogOpen(false);
+    setVideoToDeleteIndex(null);
   };
 
   const handleEditVideo = (index: number) => {
@@ -318,25 +262,20 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadProgress((prev) => ({
-      ...prev,
-      [file.name]: false,
-    }));
-
     const previewUrl = URL.createObjectURL(file);
+
+    setUploadProgress((prev) => ({ ...prev, [file.name]: false }));
     setNewVideo((prev) => ({
       ...prev,
       file,
       url: previewUrl,
       isLocalFile: true,
-      platform: undefined,
+      uploadType: MediaUploadType.UPLOAD,
+      platformType: undefined,
     }));
 
     setTimeout(() => {
-      setUploadProgress((prev) => ({
-        ...prev,
-        [file.name]: true,
-      }));
+      setUploadProgress((prev) => ({ ...prev, [file.name]: true }));
     }, 1000);
   };
 
@@ -407,20 +346,15 @@ export default function VideoPageCreator({ fromTemplatePage = false }: VideoProp
         </Button>
       </Box>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Confirmar Exclusão</DialogTitle>
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+          <DialogContentText>
             Tem certeza que deseja excluir este vídeo? Esta ação não pode ser desfeita.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">
+          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             Cancelar
           </Button>
           <Button onClick={handleConfirmDelete} color="error" autoFocus>

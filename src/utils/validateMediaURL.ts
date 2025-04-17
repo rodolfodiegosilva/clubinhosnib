@@ -1,19 +1,24 @@
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import { MediaPlatform } from "store/slices/types";
 
-export function validateMediaURL(url: string, platform?: "youtube" | "googledrive" | "onedrive" | "dropbox" | "ANY"): boolean {
+export function validateMediaURL(url: string, platform?: MediaPlatform): boolean {
   if (!url || !platform) return false;
 
   switch (platform) {
-    case "youtube":
+    case MediaPlatform.YOUTUBE:
       return url.includes("youtube.com") || url.includes("youtu.be");
-    case "googledrive":
+
+    case MediaPlatform.GOOGLE_DRIVE:
       return url.includes("drive.google.com");
-    case "onedrive":
+
+    case MediaPlatform.ONEDRIVE:
       return url.includes("onedrive.live.com") || url.includes("1drv.ms");
-    case "dropbox":
+
+    case MediaPlatform.DROPBOX:
       return url.includes("dropbox.com");
-    case "ANY":
-      return true; // Accept any URL when platform is "ANY"
+
+    case MediaPlatform.ANY:
+      return true;
+
     default:
       return false;
   }

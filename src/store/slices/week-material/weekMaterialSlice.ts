@@ -1,51 +1,71 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { RouteData } from "../route/routeSlice";
-
-export interface WeekMediaItem {
-  id?: string;
-  title: string;
-  description: string;
-  type: "upload" | "link";
-  platform?: "youtube" | "googledrive" | "onedrive" | "dropbox";
-  url: string;
-  file?: File;
-  isLocalFile?: boolean;
-  originalName?: string;
-  size?: number
-}
+import { MediaItem } from "../types";
+import api from '../../../config/axiosConfig';
 
 export interface WeekMaterialPageData {
   id: string;
   title: string;
   subtitle: string;
+  currentWeek?: boolean;
   description: string;
   createdAt: string;
   updatedAt: string;
-  videos: WeekMediaItem[];
-  documents: WeekMediaItem[];
-  images: WeekMediaItem[];
-  audios: WeekMediaItem[];
+  videos: MediaItem[];
+  documents: MediaItem[];
+  images: MediaItem[];
+  audios: MediaItem[];
   route: RouteData;
 }
 
 interface WeekMaterialState {
-  studyMaterialData: WeekMaterialPageData | null;
+  weekMaterialSData: WeekMaterialPageData | null;
+  loading: boolean;
+  error: string | null;
 }
 
+// Estado inicial
 const initialState: WeekMaterialState = {
-  studyMaterialData: null,
+  weekMaterialSData: null,
+  loading: false,
+  error: null,
 };
 
+// ✅ Thunk para buscar o material da semana atual
+export const fetchCurrentWeekMaterial = createAsyncThunk<WeekMaterialPageData>(
+  'studyMaterial/fetchCurrentWeek',
+  async () => {
+    const response = await api.get<WeekMaterialPageData>('/week-material-pages/current-week');
+    return response.data;
+  }
+);
+
+// Slice
 const studyMaterialSlice = createSlice({
   name: "studyMaterial",
   initialState,
   reducers: {
     setWeekMaterialData: (state, action: PayloadAction<WeekMaterialPageData>) => {
-      state.studyMaterialData = action.payload;
+      state.weekMaterialSData = action.payload;
     },
     clearWeekMaterialData: (state) => {
-      state.studyMaterialData = null;
+      state.weekMaterialSData = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCurrentWeekMaterial.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentWeekMaterial.fulfilled, (state, action) => {
+        state.loading = false;
+        state.weekMaterialSData = action.payload;
+      })
+      .addCase(fetchCurrentWeekMaterial.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? "Erro ao buscar material da semana.";
+      });
   },
 });
 

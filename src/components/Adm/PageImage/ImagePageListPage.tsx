@@ -2,29 +2,30 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Grid,
   CircularProgress,
   Alert,
-  Button,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  TextField,
 } from "@mui/material";
-import { Visibility, Delete } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import api from "../../../config/axiosConfig";
 import { AppDispatch } from "../../../store/slices";
-import { setImageData, ImagePageData } from "store/slices/image/imageSlice";
+import {
+  setImageData,
+  ImagePageData,
+} from "store/slices/image/imageSlice";
+
+import ImagePageCard from "./ImagePageCard";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import ImagePageDetailsModal from "./ImagePageDetailsModal";
 
 export default function ImagePageListPage() {
   const [imagePages, setImagePages] = useState<ImagePageData[]>([]);
+  const [filteredPages, setFilteredPages] = useState<ImagePageData[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState("");
   const [pageToDelete, setPageToDelete] = useState<ImagePageData | null>(null);
   const [selectedPage, setSelectedPage] = useState<ImagePageData | null>(null);
@@ -32,11 +33,16 @@ export default function ImagePageListPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    fetchImagePages();
+  }, []);
+
   const fetchImagePages = async () => {
     setLoading(true);
     try {
       const response = await api.get("/image-pages");
       setImagePages(response.data);
+      setFilteredPages(response.data);
     } catch (err) {
       console.error("Erro ao buscar páginas de imagens:", err);
       setError("Erro ao buscar páginas de imagens");
@@ -46,12 +52,17 @@ export default function ImagePageListPage() {
   };
 
   useEffect(() => {
-    fetchImagePages();
-  }, []);
-
-  const truncateDescription = (description: string, length: number = 100) => {
-    return description.length > length ? description.substring(0, length) + "..." : description;
-  };
+    setIsFiltering(true);
+    const timer = setTimeout(() => {
+      const term = searchTerm.toLowerCase();
+      const filtered = imagePages.filter((page) =>
+        page.title?.toLowerCase().includes(term)
+      );
+      setFilteredPages(filtered);
+      setIsFiltering(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, imagePages]);
 
   const handleEdit = (page: ImagePageData) => {
     dispatch(setImageData(page));
@@ -60,10 +71,8 @@ export default function ImagePageListPage() {
 
   const handleDelete = async () => {
     if (!pageToDelete) return;
-
     setPageToDelete(null);
     setLoading(true);
-
     try {
       await api.delete(`/image-pages/${pageToDelete.id}`);
       await fetchImagePages();
@@ -75,18 +84,16 @@ export default function ImagePageListPage() {
     }
   };
 
-  // Renderização do componente
   return (
     <Box
       sx={{
         px: { xs: 0, md: 1 },
         py: { xs: 0, md: 1 },
         mt: { xs: 0, md: 4 },
-        bgcolor: "#f5f7fa", // Fundo claro para um visual administrativo
+        bgcolor: "#f5f7fa",
         minHeight: "100vh",
       }}
     >
-      {/* Título da página */}
       <Typography
         variant="h4"
         fontWeight="bold"
@@ -96,7 +103,16 @@ export default function ImagePageListPage() {
         Páginas de Imagens
       </Typography>
 
-      {loading ? (
+      <Box maxWidth={500} mx="auto" mb={5}>
+        <TextField
+          fullWidth
+          placeholder="Buscar por título..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Box>
+
+      {loading || isFiltering ? (
         <Box textAlign="center" mt={10}>
           <CircularProgress />
         </Box>
@@ -104,13 +120,13 @@ export default function ImagePageListPage() {
         <Box textAlign="center" mt={10}>
           <Alert severity="error">{error}</Alert>
         </Box>
-      ) : imagePages.length === 0 ? (
+      ) : filteredPages.length === 0 ? (
         <Box textAlign="center" mt={10}>
           <Alert severity="info">Nenhuma página de imagens encontrada.</Alert>
         </Box>
       ) : (
         <Grid container spacing={4} justifyContent="center">
-          {imagePages.map((page) => (
+          {filteredPages.map((page) => (
             <Grid
               item
               key={page.id}
@@ -121,95 +137,22 @@ export default function ImagePageListPage() {
                 display: "flex",
               }}
             >
-              <Card
-                sx={{
-                  flex: 1,
-                  borderRadius: 3,
-                  boxShadow: 3,
-                  p: 2,
-                  bgcolor: "#fff",
-                  border: "1px solid #e0e0e0",
-                  position: "relative",
-                }}
-              >
-                {/* Botão de exclusão */}
-                <IconButton
-                  size="small"
-                  onClick={() => setPageToDelete(page)}
-                  sx={{ position: "absolute", top: 8, right: 8, color: "#d32f2f" }}
-                  title="Excluir Página"
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
-
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    fontWeight="bold"
-                    textAlign="center"
-                    gutterBottom
-                    sx={{ mt: { xs: 0, md: 2 }, mb: { xs: 1, md: 2 }, fontSize: { xs: "1rem", md: "1.5rem" } }}
-                  >
-                    {page.title || "Sem Título"}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    textAlign="center"
-                    sx={{ mt: { xs: 0, md: 2 }, mb: { xs: 1, md: 2 }, fontSize: { xs: ".8rem", md: "1rem" } }}
-                  >
-                    {truncateDescription(page.description)}
-                  </Typography>
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    textAlign="center"
-                    sx={{ mt: { xs: 0, md: 2 }, mb: { xs: 1, md: 2 }, fontSize: { xs: ".8rem", md: "1rem" } }}
-                  >
-                    {page.public ? "Pública" : "Privada"}
-                  </Typography>
-
-                  <Box textAlign="center" mt={3}>
-                    <Button
-                      variant="contained"
-                      startIcon={<Visibility />}
-                      onClick={() => setSelectedPage(page)}
-                      sx={{ mr: 2 }}
-                    >
-                      Ver Mais Detalhes
-                    </Button>
-                    <Button variant="outlined" onClick={() => handleEdit(page)}>
-                      Editar
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+              <ImagePageCard
+                page={page}
+                onDelete={setPageToDelete}
+                onEdit={handleEdit}
+                onViewDetails={setSelectedPage}
+              />
             </Grid>
           ))}
         </Grid>
       )}
 
-      <Dialog
-        open={!!pageToDelete}
-        onClose={() => setPageToDelete(null)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Confirmar Exclusão</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Tem certeza que deseja excluir a página <strong>{pageToDelete?.title || "Sem Título"}</strong>?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPageToDelete(null)}>Cancelar</Button>
-          <Button color="error" variant="contained" onClick={handleDelete}>
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteConfirmDialog
+        page={pageToDelete}
+        onCancel={() => setPageToDelete(null)}
+        onConfirm={handleDelete}
+      />
 
       <ImagePageDetailsModal
         page={selectedPage}

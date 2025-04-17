@@ -1,15 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-/**
- * Define a estrutura do objeto "Evento"
- * baseado no retorno de findAll
- */
 export interface EventData {
   id: string;
   createdAt: string;
   updatedAt: string;
   title: string;
-  date: string;        // "2025-04-10"
+  date: string;
   location: string;
   description: string;
 }

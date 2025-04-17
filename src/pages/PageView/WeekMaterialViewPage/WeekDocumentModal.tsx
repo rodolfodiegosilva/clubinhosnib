@@ -7,12 +7,16 @@ import {
   useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import {
+  MediaItem,
+  MediaPlatform,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  document: WeekMediaItem | null;
+  document: MediaItem | null;
 }
 
 export default function WeekDocumentModal({ open, onClose, document }: Props) {
@@ -20,6 +24,17 @@ export default function WeekDocumentModal({ open, onClose, document }: Props) {
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   if (!document) return null;
+
+  const getDropboxRawUrl = (url: string): string =>
+    url
+      .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+      .replace(/\?dl=\d.*$/, "?raw=1");
+
+  const getFinalUrl = (): string => {
+    if (document.uploadType === MediaUploadType.UPLOAD || document.isLocalFile) return document.url;
+    if (document.platformType === MediaPlatform.DROPBOX) return getDropboxRawUrl(document.url);
+    return document.url;
+  };
 
   return (
     <Dialog
@@ -55,7 +70,7 @@ export default function WeekDocumentModal({ open, onClose, document }: Props) {
       </DialogTitle>
       <DialogContent sx={{ p: 0 }}>
         <iframe
-          src={document.url}
+          src={getFinalUrl()}
           title={document.title}
           style={{
             width: "100%",

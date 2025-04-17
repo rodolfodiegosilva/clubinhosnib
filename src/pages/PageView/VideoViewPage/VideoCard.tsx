@@ -3,10 +3,10 @@ import { Card, Typography, Box, Modal, Fade } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { motion } from "framer-motion";
 import VideoPlayer from "./VideoPlayer";
-import { VideoItem } from "store/slices/video/videoSlice";
+import { MediaItem, MediaUploadType, MediaPlatform } from "store/slices/types";
 
 interface Props {
-  video: VideoItem;
+  video: MediaItem;
 }
 
 const VideoCard = ({ video }: Props) => {
@@ -16,7 +16,9 @@ const VideoCard = ({ video }: Props) => {
   const handleClose = () => setOpen(false);
 
   const videoId = video.url?.split("v=")[1]?.split("&")[0];
-  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/0.jpg` : undefined;
+  const thumbnailUrl = video.platformType === MediaPlatform.YOUTUBE && videoId
+    ? `https://img.youtube.com/vi/${videoId}/0.jpg`
+    : undefined;
 
   return (
     <>
@@ -40,9 +42,9 @@ const VideoCard = ({ video }: Props) => {
           onClick={handleOpen}
         >
           <Box sx={{ position: "relative" }}>
-            {video.type === "upload" && video.url ? (
+            {video.uploadType === MediaUploadType.UPLOAD && video.url ? (
               <video src={video.url} style={{ width: "100%", borderRadius: 3 }} muted />
-            ) : video.type === "link" && video.platform === "youtube" && thumbnailUrl ? (
+            ) : video.uploadType === MediaUploadType.LINK && video.platformType === MediaPlatform.YOUTUBE && thumbnailUrl ? (
               <img
                 src={thumbnailUrl}
                 alt={video.title}

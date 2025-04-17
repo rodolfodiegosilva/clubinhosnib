@@ -18,21 +18,28 @@ import {
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import { validateMediaURL } from "utils/validateMediaURL";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import {
+  MediaItem,
+  MediaType,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface Props {
-  documents: WeekMediaItem[];
-  setDocuments: (docs: WeekMediaItem[]) => void;
+  documents: MediaItem[];
+  setDocuments: (docs: MediaItem[]) => void;
 }
 
 export default function WeekDocuments({ documents, setDocuments }: Props) {
-  const [newDoc, setNewDoc] = useState<WeekMediaItem>({
+  const [newDoc, setNewDoc] = useState<MediaItem>({
     title: "",
     description: "",
-    type: "link",
-    platform: "googledrive",
+    mediaType: MediaType.DOCUMENT,
+    uploadType: MediaUploadType.LINK,
+    platformType: MediaPlatform.GOOGLE_DRIVE,
     url: "",
   });
+
   const [fileName, setFileName] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
@@ -53,14 +60,16 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
   };
 
   const handleAddOrUpdate = () => {
-    const isValid = newDoc.type === "upload" || validateMediaURL(newDoc.url, newDoc.platform);
+    const isValid =
+      newDoc.uploadType === MediaUploadType.UPLOAD ||
+      validateMediaURL(newDoc.url, newDoc.platformType);
     const hasError =
-      !newDoc.title || !newDoc.description || !newDoc.url || (newDoc.type === "link" && !isValid);
+      !newDoc.title || !newDoc.description || !newDoc.url || (newDoc.uploadType === MediaUploadType.LINK && !isValid);
 
     setErrors({
       title: !newDoc.title,
       description: !newDoc.description,
-      url: !newDoc.url || (newDoc.type === "link" && !isValid),
+      url: !newDoc.url || (newDoc.uploadType === MediaUploadType.LINK && !isValid),
     });
 
     if (hasError) return;
@@ -77,8 +86,9 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
     setNewDoc({
       title: "",
       description: "",
-      type: "link",
-      platform: "googledrive",
+      mediaType: MediaType.DOCUMENT,
+      uploadType: MediaUploadType.LINK,
+      platformType: MediaPlatform.GOOGLE_DRIVE,
       url: "",
     });
     setFileName("");
@@ -124,42 +134,42 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
           <FormControl fullWidth>
             <InputLabel>Tipo</InputLabel>
             <Select
-              value={newDoc.type}
+              value={newDoc.uploadType}
               label="Tipo"
               onChange={(e) =>
                 setNewDoc((prev) => ({
                   ...prev,
-                  type: e.target.value as "upload" | "link",
+                  uploadType: e.target.value as MediaUploadType,
                   url: "",
                   file: undefined,
-                  platform: "googledrive",
+                  platformType: MediaPlatform.GOOGLE_DRIVE,
                 }))
               }
             >
-              <MenuItem value="link">Link</MenuItem>
-              <MenuItem value="upload">Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {newDoc.type === "link" && (
+        {newDoc.uploadType === MediaUploadType.LINK && (
           <>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Plataforma</InputLabel>
                 <Select
-                  value={newDoc.platform || ""}
+                  value={newDoc.platformType || ""}
                   label="Plataforma"
                   onChange={(e) =>
                     setNewDoc((prev) => ({
                       ...prev,
-                      platform: e.target.value as WeekMediaItem["platform"],
+                      platformType: e.target.value as MediaPlatform,
                     }))
                   }
                 >
-                  <MenuItem value="googledrive">Google Drive</MenuItem>
-                  <MenuItem value="onedrive">OneDrive</MenuItem>
-                  <MenuItem value="dropbox">Dropbox</MenuItem>
+                  <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                  <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                  <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -177,7 +187,7 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
           </>
         )}
 
-        {newDoc.type === "upload" && (
+        {newDoc.uploadType === MediaUploadType.UPLOAD && (
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload de Documento
@@ -203,9 +213,11 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Box border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{doc.title}</Typography>
-              <Typography variant="body2" mb={1}>{doc.description}</Typography>
+              <Typography variant="body2" mb={1}>
+                {doc.description}
+              </Typography>
               <Box display="flex" gap={1} mt={1}>
-                {doc.type === "upload" && (
+                {doc.uploadType === MediaUploadType.UPLOAD && (
                   <Tooltip title="Visualizar">
                     <IconButton color="primary" onClick={() => setPreviewDoc(doc.url)}>
                       <Visibility fontSize="small" />
@@ -252,7 +264,9 @@ export default function WeekDocuments({ documents, setDocuments }: Props) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteIndex(null)}>Cancelar</Button>
-          <Button color="error" onClick={confirmRemove}>Remover</Button>
+          <Button color="error" onClick={confirmRemove}>
+            Remover
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

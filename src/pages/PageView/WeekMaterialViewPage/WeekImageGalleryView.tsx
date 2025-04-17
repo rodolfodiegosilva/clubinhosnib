@@ -1,10 +1,14 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import DownloadButton from "./DownloadButton";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import {
+  MediaItem,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface Props {
-  image: WeekMediaItem;
+  image: MediaItem;
 }
 
 const getGoogleDriveThumbnailUrl = (url: string): string | null => {
@@ -14,13 +18,17 @@ const getGoogleDriveThumbnailUrl = (url: string): string | null => {
 
 export default function WeekImageGallery({ image }: Props) {
   const theme = useTheme();
-  const canVisualize = image.isLocalFile || image.type === "upload" || image.platform === "googledrive";
 
-  const getImageUrl = () => {
-    if (image.isLocalFile || image.type === "upload") {
+  const canVisualize =
+    image.isLocalFile ||
+    image.uploadType === MediaUploadType.UPLOAD ||
+    image.platformType === MediaPlatform.GOOGLE_DRIVE;
+
+  const getImageUrl = (): string | null => {
+    if (image.isLocalFile || image.uploadType === MediaUploadType.UPLOAD) {
       return image.url;
     }
-    if (image.platform === "googledrive") {
+    if (image.platformType === MediaPlatform.GOOGLE_DRIVE) {
       return getGoogleDriveThumbnailUrl(image.url);
     }
     return null;

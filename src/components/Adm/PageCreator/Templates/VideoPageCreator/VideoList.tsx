@@ -1,9 +1,12 @@
 import { Box, Card, Grid, IconButton, Typography } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
-import { VideoItem } from "../../../../../store/slices/video/videoSlice";
+import {
+  MediaItem,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface VideoListProps {
-  videos: VideoItem[];
+  videos: MediaItem[];
   handleRemoveVideo: (index: number) => void;
   handleEditVideo: (index: number) => void;
 }
@@ -21,7 +24,7 @@ export default function VideoList({ videos, handleRemoveVideo, handleEditVideo }
               {video.description}
             </Typography>
 
-            {video.type === "link" ? (
+            {video.uploadType === MediaUploadType.LINK ? (
               <Box
                 sx={{
                   width: "100%",

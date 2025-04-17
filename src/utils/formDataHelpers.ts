@@ -1,28 +1,25 @@
-import { VideoItem } from "store/slices/video/videoSlice";
+import {
+  MediaItem,
+  MediaUploadType,
+} from "store/slices/types";
 
-export interface FileItem {
-  type: "upload" | "link";
-  url?: string;
-  file?: File;
-  [key: string]: any;
-}
-
-/**
- * Adiciona um arquivo de upload ao FormData e retorna o item com `fileField` para referência no JSON.
- * Suporta múltiplos tipos: vídeo, imagem, documento e áudio.
- */
 export const buildFileItem = (
-  item: VideoItem,
+  item: MediaItem,
   index: number,
   prefix: string,
   formData: FormData
-) => {
+): MediaItem => {
   const fileField = `${prefix}-${index}`;
-  if (item.type === "upload" && item.isLocalFile && item.file) {
-    formData.append(fileField, item.file);
+
+  const shouldAttachFile =
+    item.uploadType === MediaUploadType.UPLOAD && item.isLocalFile && !!item.file;
+
+  if (shouldAttachFile) {
+    formData.append(fileField, item.file as Blob);
   }
+
   return {
     ...item,
-    fileField: item.type === "upload" && item.isLocalFile ? fileField : undefined,
+    fileField: shouldAttachFile ? fileField : undefined,
   };
 };

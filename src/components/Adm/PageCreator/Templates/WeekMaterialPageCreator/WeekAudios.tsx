@@ -16,20 +16,21 @@ import {
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import { useState } from "react";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
-import { validateMediaURL } from "utils/validateMediaURL"; // ✅ Função utilitária
+import { validateMediaURL } from "utils/validateMediaURL";
+import { MediaItem, MediaPlatform, MediaType, MediaUploadType } from "store/slices/types";
 
 interface Props {
-  audios: WeekMediaItem[];
-  setAudios: (a: WeekMediaItem[]) => void;
+  audios: MediaItem[];
+  setAudios: (a: MediaItem[]) => void;
 }
 
 export default function WeekAudios({ audios, setAudios }: Props) {
-  const [newAudio, setNewAudio] = useState<WeekMediaItem>({
+  const [newAudio, setNewAudio] = useState<MediaItem>({
     title: "",
     description: "",
-    type: "link",
-    platform: "googledrive",
+    mediaType: MediaType.AUDIO,
+    uploadType: MediaUploadType.LINK,
+    platformType: MediaPlatform.GOOGLE_DRIVE,
     url: "",
   });
 
@@ -45,7 +46,9 @@ export default function WeekAudios({ audios, setAudios }: Props) {
   };
 
   const handleAddOrEdit = () => {
-    const isValidURL = newAudio.type === "upload" || validateMediaURL(newAudio.url, newAudio.platform);
+    const isValidURL =
+      newAudio.uploadType === MediaUploadType.UPLOAD ||
+      validateMediaURL(newAudio.url, newAudio.platformType);
     const hasError = !newAudio.title || !newAudio.description || !newAudio.url || !isValidURL;
 
     setErrors({
@@ -65,7 +68,14 @@ export default function WeekAudios({ audios, setAudios }: Props) {
       setAudios([...audios, newAudio]);
     }
 
-    setNewAudio({ title: "", description: "", type: "link", platform: "googledrive", url: "" });
+    setNewAudio({
+      title: "",
+      description: "",
+      mediaType: MediaType.AUDIO,
+      uploadType: MediaUploadType.LINK,
+      platformType: MediaPlatform.GOOGLE_DRIVE,
+      url: "",
+    });
     setErrors({ title: false, description: false, url: false });
   };
 
@@ -115,42 +125,42 @@ export default function WeekAudios({ audios, setAudios }: Props) {
             <InputLabel>Tipo</InputLabel>
             <Select
               label="Tipo"
-              value={newAudio.type}
+              value={newAudio.uploadType}
               onChange={(e) => {
-                const newType = e.target.value as "upload" | "link";
+                const newType = e.target.value as MediaUploadType;
                 setNewAudio({
                   ...newAudio,
-                  type: newType,
-                  platform: newType === "link" ? "googledrive" : undefined,
+                  uploadType: newType,
+                  platformType: newType === MediaUploadType.LINK ? MediaPlatform.GOOGLE_DRIVE : undefined,
                   url: "",
                   file: undefined,
                 });
               }}
             >
-              <MenuItem value="link">Link</MenuItem>
-              <MenuItem value="upload">Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {newAudio.type === "link" && (
+        {newAudio.uploadType === MediaUploadType.LINK && (
           <>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Origem</InputLabel>
                 <Select
-                  value={newAudio.platform || ""}
+                  value={newAudio.platformType || ""}
                   label="Origem"
                   onChange={(e) =>
                     setNewAudio({
                       ...newAudio,
-                      platform: e.target.value as WeekMediaItem["platform"],
+                      platformType: e.target.value as MediaPlatform,
                     })
                   }
                 >
-                  <MenuItem value="googledrive">Google Drive</MenuItem>
-                  <MenuItem value="onedrive">OneDrive</MenuItem>
-                  <MenuItem value="dropbox">Dropbox</MenuItem>
+                  <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                  <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                  <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -168,7 +178,7 @@ export default function WeekAudios({ audios, setAudios }: Props) {
           </>
         )}
 
-        {newAudio.type === "upload" && (
+        {newAudio.uploadType === MediaUploadType.UPLOAD && (
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload de Áudio MP3
@@ -194,7 +204,9 @@ export default function WeekAudios({ audios, setAudios }: Props) {
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Box border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{audio.title}</Typography>
-              <Typography variant="body2" mb={1}>{audio.description}</Typography>
+              <Typography variant="body2" mb={1}>
+                {audio.description}
+              </Typography>
               <audio controls style={{ width: "100%", marginTop: 8 }}>
                 <source src={audio.url} type="audio/mp3" />
                 Seu navegador não suporta áudio.

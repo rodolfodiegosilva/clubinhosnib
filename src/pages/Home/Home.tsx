@@ -1,12 +1,19 @@
 import React, { useMemo } from "react";
-import { Box, Typography, Grid, Card as MuiCard, CardContent, CardMedia } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Grid,
+  Card as MuiCard,
+  CardContent,
+  CardMedia,
+  CircularProgress,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import banner from "../../assets/banner_2.png";
 import WeekBanner from "../../components/WeekBanner/WeekBanner";
 import { RootState as RootStateType } from "../../store/slices";
-import { RouteData } from "../../store/slices/route/routeSlice";
 
 interface CustomCardProps {
   title: string;
@@ -57,19 +64,21 @@ const CustomCard = ({ title, description, image, link }: CustomCardProps) => {
 };
 
 const Home: React.FC = () => {
-  const { dynamicRoutes, isAuthenticated } = useSelector((state: RootStateType) => ({
+  const {
+    dynamicRoutes,
+    isAuthenticated,
+    routeLoading,
+    weekMaterial,
+    weekMaterialLoading,
+  } = useSelector((state: RootStateType) => ({
     dynamicRoutes: state.routes.routes,
     isAuthenticated: state.auth.isAuthenticated,
+    routeLoading: state.routes.loading,
+    weekMaterial: state.weekMaterial.weekMaterialSData,
+    weekMaterialLoading: state.weekMaterial.loading,
   }));
 
   const feedImageGalleryId = process.env.REACT_APP_FEED_MINISTERIO_ID ?? "";
-
-  const getLatestWeekMaterial = (routes: RouteData[]): RouteData | undefined =>
-    routes
-      .filter((route) => route.entityType === "WeekMaterialsPage")
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-
-  const latestWeekRoute = useMemo(() => getLatestWeekMaterial(dynamicRoutes), [dynamicRoutes]);
 
   const filteredCards = useMemo(() => {
     return dynamicRoutes.filter(
@@ -80,6 +89,8 @@ const Home: React.FC = () => {
         card.entityType !== "meditation"
     );
   }, [dynamicRoutes, isAuthenticated, feedImageGalleryId]);
+
+  const isLoading = routeLoading || weekMaterialLoading;
 
   return (
     <Box
@@ -166,15 +177,19 @@ const Home: React.FC = () => {
         </Box>
       </Box>
 
-      {isAuthenticated && latestWeekRoute && (
+      {isAuthenticated && weekMaterial && (
         <WeekBanner
-          title={latestWeekRoute.title ?? "Sem título"}
-          subtitle={latestWeekRoute.subtitle ?? ""}
-          linkTo={`/${latestWeekRoute.path}`}
+          title={weekMaterial.title ?? "Sem título"}
+          subtitle={weekMaterial.subtitle ?? ""}
+          linkTo={`/${weekMaterial.route.path}`}
         />
       )}
 
-      {filteredCards.length > 0 && (
+      {isLoading ? (
+        <Box sx={{ my: 10 }}>
+          <CircularProgress />
+        </Box>
+      ) : filteredCards.length > 0 ? (
         <Box sx={{ width: { xs: "95%", sm: "90%", md: "85%" }, py: { xs: 4, sm: 6 } }}>
           <Grid container spacing={3} justifyContent="center" alignItems="stretch">
             {filteredCards.map((card, index) => (
@@ -198,7 +213,7 @@ const Home: React.FC = () => {
             ))}
           </Grid>
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 };

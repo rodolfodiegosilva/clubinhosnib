@@ -1,8 +1,12 @@
 import { Typography, Box } from "@mui/material";
-import { VideoItem } from "store/slices/video/videoSlice";
+import {
+  MediaItem,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
-const VideoPlayer = ({ video }: { video: VideoItem }) => {
-  if (video.type === "upload" && video.url) {
+const VideoPlayer = ({ video }: { video: MediaItem }) => {
+  if (video.uploadType === MediaUploadType.UPLOAD && video.url) {
     return (
       <Box sx={{ borderRadius: 3, overflow: "hidden" }}>
         <video controls style={{ width: "100%", display: "block" }}>
@@ -13,17 +17,38 @@ const VideoPlayer = ({ video }: { video: VideoItem }) => {
     );
   }
 
-  if (video.type === "link" && video.platform && video.url) {
+  if (
+    video.uploadType === MediaUploadType.LINK &&
+    video.platformType &&
+    video.url
+  ) {
     let embedUrl = "";
-    if (video.platform === "youtube") {
-      const videoId = video.url.split("v=")[1]?.split("&")[0];
-      embedUrl = `https://www.youtube.com/embed/${videoId}`;
-    } else if (video.platform === "googledrive") {
-      const fileIdMatch = video.url.match(/\/d\/(.*?)(\/|$)/);
-      const fileId = fileIdMatch?.[1];
-      embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-    } else if (video.platform === "onedrive") {
-      embedUrl = video.url;
+
+    switch (video.platformType) {
+      case MediaPlatform.YOUTUBE: {
+        const videoId = video.url.split("v=")[1]?.split("&")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        break;
+      }
+
+      case MediaPlatform.GOOGLE_DRIVE: {
+        const fileIdMatch = video.url.match(/\/d\/(.*?)(\/|$)/);
+        const fileId = fileIdMatch?.[1];
+        embedUrl = fileId
+          ? `https://drive.google.com/file/d/${fileId}/preview`
+          : "";
+        break;
+      }
+
+      case MediaPlatform.ONEDRIVE:
+      case MediaPlatform.DROPBOX:
+      case MediaPlatform.ANY: {
+        embedUrl = video.url;
+        break;
+      }
+
+      default:
+        embedUrl = "";
     }
 
     return embedUrl ? (

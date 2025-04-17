@@ -17,22 +17,29 @@ import {
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import { useState } from "react";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
-import { validateMediaURL } from "utils/validateMediaURL"; // <-- IMPORTADO
+import { validateMediaURL } from "utils/validateMediaURL";
+import {
+  MediaItem,
+  MediaType,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface Props {
-  images: WeekMediaItem[];
-  setImages: (imgs: WeekMediaItem[]) => void;
+  images: MediaItem[];
+  setImages: (imgs: MediaItem[]) => void;
 }
 
 export default function WeekImages({ images, setImages }: Props) {
-  const [newImg, setNewImg] = useState<WeekMediaItem>({
+  const [newImg, setNewImg] = useState<MediaItem>({
     title: "",
     description: "",
-    type: "link",
+    mediaType: MediaType.IMAGE,
+    uploadType: MediaUploadType.LINK,
     url: "",
-    platform: "googledrive",
+    platformType: MediaPlatform.GOOGLE_DRIVE,
   });
+
   const [fileName, setFileName] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
@@ -52,14 +59,18 @@ export default function WeekImages({ images, setImages }: Props) {
   };
 
   const handleAddOrUpdate = () => {
-    const isValid = newImg.type === "upload" || validateMediaURL(newImg.url, newImg.platform);
+    const isValid =
+      newImg.uploadType === MediaUploadType.UPLOAD ||
+      validateMediaURL(newImg.url, newImg.platformType);
+
     const hasError =
-      !newImg.title || !newImg.description || !newImg.url || (newImg.type === "link" && !isValid);
+      !newImg.title || !newImg.description || !newImg.url ||
+      (newImg.uploadType === MediaUploadType.LINK && !isValid);
 
     setErrors({
       title: !newImg.title,
       description: !newImg.description,
-      url: !newImg.url || (newImg.type === "link" && !isValid),
+      url: !newImg.url || (newImg.uploadType === MediaUploadType.LINK && !isValid),
     });
 
     if (hasError) return;
@@ -73,7 +84,14 @@ export default function WeekImages({ images, setImages }: Props) {
     }
 
     setImages(updated);
-    setNewImg({ title: "", description: "", type: "link", url: "", platform: "googledrive" });
+    setNewImg({
+      title: "",
+      description: "",
+      mediaType: MediaType.IMAGE,
+      uploadType: MediaUploadType.LINK,
+      url: "",
+      platformType: MediaPlatform.GOOGLE_DRIVE,
+    });
     setFileName("");
   };
 
@@ -117,42 +135,42 @@ export default function WeekImages({ images, setImages }: Props) {
           <FormControl fullWidth>
             <InputLabel>Tipo</InputLabel>
             <Select
-              value={newImg.type}
               label="Tipo"
+              value={newImg.uploadType}
               onChange={(e) =>
                 setNewImg((prev) => ({
                   ...prev,
-                  type: e.target.value as "upload" | "link",
+                  uploadType: e.target.value as MediaUploadType,
                   url: "",
                   file: undefined,
-                  platform: "googledrive",
+                  platformType: MediaPlatform.GOOGLE_DRIVE,
                 }))
               }
             >
-              <MenuItem value="link">Link</MenuItem>
-              <MenuItem value="upload">Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {newImg.type === "link" && (
+        {newImg.uploadType === MediaUploadType.LINK && (
           <>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Plataforma</InputLabel>
                 <Select
-                  value={newImg.platform || ""}
                   label="Plataforma"
+                  value={newImg.platformType || ""}
                   onChange={(e) =>
                     setNewImg((prev) => ({
                       ...prev,
-                      platform: e.target.value as WeekMediaItem["platform"],
+                      platformType: e.target.value as MediaPlatform,
                     }))
                   }
                 >
-                  <MenuItem value="googledrive">Google Drive</MenuItem>
-                  <MenuItem value="onedrive">OneDrive</MenuItem>
-                  <MenuItem value="dropbox">Dropbox</MenuItem>
+                  <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                  <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                  <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -170,7 +188,7 @@ export default function WeekImages({ images, setImages }: Props) {
           </>
         )}
 
-        {newImg.type === "upload" && (
+        {newImg.uploadType === MediaUploadType.UPLOAD && (
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload de Imagem
@@ -196,7 +214,9 @@ export default function WeekImages({ images, setImages }: Props) {
           <Grid item xs={12} sm={6} md={4} key={index}>
             <Box border={1} borderRadius={2} p={2} position="relative">
               <Typography fontWeight="bold">{img.title}</Typography>
-              <Typography variant="body2" mb={1}>{img.description}</Typography>
+              <Typography variant="body2" mb={1}>
+                {img.description}
+              </Typography>
               <img
                 src={img.url}
                 alt={img.title}
@@ -226,7 +246,9 @@ export default function WeekImages({ images, setImages }: Props) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteIndex(null)}>Cancelar</Button>
-          <Button color="error" onClick={confirmRemove}>Remover</Button>
+          <Button color="error" onClick={confirmRemove}>
+            Remover
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -13,13 +13,13 @@ import {
   Paper,
   Grid,
 } from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
-import { VideoPageData, VideoItem } from "store/slices/video/videoSlice";
-
-interface ExtendedVideoItem extends VideoItem {
-  originalName?: string;
-  size?: number;
-}
+import { ContentCopy, Close } from "@mui/icons-material";
+import { VideoPageData } from "store/slices/video/videoSlice";
+import {
+  MediaItem,
+  MediaPlatform,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface VideoPageDetailsModalProps {
   page: VideoPageData | null;
@@ -59,17 +59,27 @@ export default function VideoPageDetailsModal({
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          textAlign: "center",
-          fontWeight: "bold",
-          fontSize: "1.5rem",
-          color: "#333",
-          p: 2,
-        }}
-      >
-        Detalhes da Página de Vídeos
-      </DialogTitle>
+      <Box sx={{ position: "relative" }}>
+        <DialogTitle
+          sx={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.5rem",
+            color: "#333",
+            p: 2,
+          }}
+        >
+          Detalhes da Página de Vídeos
+        </DialogTitle>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{ position: "absolute", top: 12, right: 12 }}
+          title="Fechar"
+        >
+          <Close />
+        </IconButton>
+      </Box>
 
       <DialogContent sx={{ px: 2, py: 1 }}>
         {page && (
@@ -116,7 +126,6 @@ export default function VideoPageDetailsModal({
               </Grid>
             </Paper>
 
-            {/* Lista de Vídeos */}
             {page.videos.length > 0 && (
               <>
                 <Divider sx={{ my: 2 }} />
@@ -132,100 +141,73 @@ export default function VideoPageDetailsModal({
                   </Typography>
 
                   <Grid container spacing={3}>
-                    {page.videos.map((video) => {
-                      const extendedVideo = video as ExtendedVideoItem;
+                    {page.videos.map((video: MediaItem) => (
+                      <Grid item xs={12} md={6} key={video.id}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            bgcolor: "#f9f9f9",
+                            height: "100%",
+                          }}
+                        >
+                          <Typography variant="body1" sx={{ color: "#333" }}>
+                            <strong>Título:</strong> {video.title || "Sem Título"}
+                          </Typography>
 
-                      return (
-                        <Grid item xs={12} md={6} key={video.id}>
-                          <Box
-                            sx={{
-                              p: 2,
-                              border: "1px solid #e0e0e0",
-                              borderRadius: 2,
-                              bgcolor: "#f9f9f9",
-                              height: "100%",
-                            }}
-                          >
-                            <Typography variant="body1" sx={{ color: "#333" }}>
-                              <strong>Título:</strong>{" "}
-                              {video.title || "Sem Título"}
+                          <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                            <strong>Descrição:</strong> {video.description || "Sem Descrição"}
+                          </Typography>
+
+                          <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                            <strong>Tipo:</strong> {video.uploadType === MediaUploadType.UPLOAD ? "Upload" : "Link"}
+                          </Typography>
+
+                          {video.platformType && (
+                            <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                              <strong>Plataforma:</strong> {video.platformType}
                             </Typography>
+                          )}
 
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#555", mt: 0.5 }}
+                          {video.url && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                mt: 1,
+                                gap: 1,
+                                flexWrap: "wrap",
+                              }}
                             >
-                              <strong>Descrição:</strong>{" "}
-                              {video.description || "Sem Descrição"}
+                              <Typography variant="body2" sx={{ color: "#555" }}>
+                                <strong>URL:</strong> {video.url}
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleCopyUrl(video.url)}
+                                title="Copiar URL"
+                                sx={{ color: "#1976d2" }}
+                              >
+                                <ContentCopy fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          )}
+
+                          {video.isLocalFile && video.originalName && (
+                            <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                              <strong>Nome Original:</strong> {video.originalName}
                             </Typography>
+                          )}
 
-                            <Typography
-                              variant="body2"
-                              sx={{ color: "#555", mt: 0.5 }}
-                            >
-                              <strong>Tipo:</strong>{" "}
-                              {video.type === "upload" ? "Upload" : "Link"}
+                          {video.size && (
+                            <Typography variant="body2" sx={{ color: "#555", mt: 0.5 }}>
+                              <strong>Tamanho:</strong> {(video.size / 1024 / 1024).toFixed(2)} MB
                             </Typography>
-
-                            {video.platform && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
-                                <strong>Plataforma:</strong> {video.platform}
-                              </Typography>
-                            )}
-
-                            {video.url && (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  mt: 1,
-                                  gap: 1,
-                                  flexWrap: "wrap",
-                                }}
-                              >
-                                <Typography
-                                  variant="body2"
-                                  sx={{ color: "#555" }}
-                                >
-                                  <strong>URL:</strong> {video.url}
-                                </Typography>
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleCopyUrl(video.url!)}
-                                  title="Copiar URL"
-                                  sx={{ color: "#1976d2" }}
-                                >
-                                  <ContentCopy fontSize="small" />
-                                </IconButton>
-                              </Box>
-                            )}
-
-                            {extendedVideo.isLocalFile && extendedVideo.originalName && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
-                                <strong>Nome Original:</strong>{" "}
-                                {extendedVideo.originalName}
-                              </Typography>
-                            )}
-
-                            {extendedVideo.size && (
-                              <Typography
-                                variant="body2"
-                                sx={{ color: "#555", mt: 0.5 }}
-                              >
-                                <strong>Tamanho:</strong>{" "}
-                                {(extendedVideo.size / 1024 / 1024).toFixed(2)} MB
-                              </Typography>
-                            )}
-                          </Box>
-                        </Grid>
-                      );
-                    })}
+                          )}
+                        </Box>
+                      </Grid>
+                    ))}
                   </Grid>
                 </Paper>
               </>

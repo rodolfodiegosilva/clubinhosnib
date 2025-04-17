@@ -2,10 +2,14 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Box, IconButton, Alert } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { MediaItem } from "../../../../../store/slices/image/imageSlice";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import {
+  MediaItem,
+  MediaPlatform,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface ImageItemProps {
   mediaItems: MediaItem[];
@@ -20,22 +24,22 @@ const getGoogleDriveThumbnailUrl = (url: string): string | null => {
 
 // URL de preview inteligente com base na plataforma
 const getPreviewUrl = (media: MediaItem): string => {
-  if (media.isLocalFile && media.file) {
+  if (media.uploadType === MediaUploadType.UPLOAD && media.file) {
     return URL.createObjectURL(media.file);
   }
 
   const url = media.url;
 
-  switch (media.platform) {
-    case "googledrive":
+  switch (media.platformType) {
+    case MediaPlatform.GOOGLE_DRIVE:
       return getGoogleDriveThumbnailUrl(url) || url;
 
-    case "dropbox":
+    case MediaPlatform.DROPBOX:
       return url
         .replace("www.dropbox.com", "dl.dropboxusercontent.com")
         .replace("?dl=0", "?raw=1");
 
-    case "onedrive":
+    case MediaPlatform.ONEDRIVE:
       return url.includes("&download=1")
         ? url.replace("&download=1", "&raw=1")
         : `${url}&raw=1`;

@@ -17,14 +17,15 @@ import FolderIcon from "@mui/icons-material/Folder";
 import { useSelector } from "react-redux";
 import { RootState } from "store/slices";
 import { RoleUser } from "store/slices/auth/authSlice";
+import { MediaPlatform, MediaItem } from "store/slices/types";
+import { getMediaPreviewUrl } from "utils/getMediaPreviewUrl";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import type { SectionData } from "store/slices/image/imageSlice";
 import { motion } from "framer-motion";
 
-
-export interface SectionItemProps extends Omit<SectionData, "id"> { }
+export interface SectionItemProps extends Omit<SectionData, "id"> {}
 
 const formatDateTime = (value: string | Date) => {
   const date = new Date(value);
@@ -34,12 +35,12 @@ const formatDateTime = (value: string | Date) => {
   };
 };
 
-const getPlatformIcon = (platform?: string) => {
+const getPlatformIcon = (platform?: MediaPlatform | string) => {
   switch (platform) {
-    case "googledrive":
+    case MediaPlatform.GOOGLE_DRIVE:
       return <DriveIcon fontSize="small" />;
-    case "onedrive":
-    case "dropbox":
+    case MediaPlatform.ONEDRIVE:
+    case MediaPlatform.DROPBOX:
       return <CloudIcon fontSize="small" />;
     default:
       return <FolderIcon fontSize="small" />;
@@ -87,12 +88,10 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
         "&:hover": { transform: "scale(1.01)" },
       }}
     >
-      {/* Título e descrição */}
       <Box textAlign="center" mb={3}>
         <Typography variant="h6" fontWeight="bold" gutterBottom>
           {caption}
         </Typography>
-
         <Typography
           variant="body1"
           color="text.secondary"
@@ -105,7 +104,6 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
         >
           {description}
         </Typography>
-
         <Box
           mt={2}
           display="flex"
@@ -129,7 +127,7 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
       <Box mt={2}>
         <Box
           component="img"
-          src={mediaItems[0].url}
+          src={getMediaPreviewUrl(mediaItems[0] as MediaItem)}
           alt={mediaItems[0].title || "Imagem destaque"}
           sx={{
             width: "100%",
@@ -149,12 +147,11 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
         />
       </Box>
 
-      {/* Miniaturas */}
       <Grid container spacing={1} mt={1} justifyContent="center">
         {thumbnails.map((item, index) => (
           <Grid item xs={4} sm={2} md={2} key={item.id || index}>
             {item.url && (
-              <Tooltip title={item.platform ?? "Imagem"} arrow>
+              <Tooltip title={item.title ?? "Imagem"} arrow>
                 <Box
                   sx={{
                     position: "relative",
@@ -168,7 +165,7 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
                 >
                   <Box
                     component="img"
-                    src={item.url}
+                    src={getMediaPreviewUrl(item as MediaItem)}
                     alt={item.title || `Miniatura ${index + 1}`}
                     sx={{
                       width: "100%",
@@ -188,7 +185,7 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
                       p: 0.5,
                     }}
                   >
-                    {getPlatformIcon(item.platform)}
+                    {getPlatformIcon(item.platformType)}
                   </Box>
                 </Box>
               </Tooltip>
@@ -197,7 +194,6 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
         ))}
       </Grid>
 
-      {/* Botão Mostrar mais/menos */}
       {mediaItems.length > 7 && (
         <Box textAlign="center" mt={2}>
           <motion.div
@@ -207,7 +203,7 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
           >
             <Typography
               variant="body2"
-              onClick={() => setShowAll(prev => !prev)}
+              onClick={() => setShowAll((prev) => !prev)}
               sx={{
                 cursor: "pointer",
                 fontWeight: "bold",
@@ -223,10 +219,8 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
             </Typography>
           </motion.div>
         </Box>
-
       )}
 
-      {/* Modal */}
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <Box
           sx={{
@@ -260,7 +254,7 @@ const SectionImagePageView: React.FC<SectionItemProps> = ({
               <SwiperSlide key={media.id || index}>
                 <Box
                   component="img"
-                  src={media.url}
+                  src={getMediaPreviewUrl(media as MediaItem)}
                   alt={media.title || `Slide ${index + 1}`}
                   sx={{
                     width: "100%",

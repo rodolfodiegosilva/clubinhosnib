@@ -9,11 +9,15 @@ import {
   Typography,
   CircularProgress,
 } from "@mui/material";
-import { VideoItem } from "../../../../../store/slices/video/videoSlice";
 import { Dispatch, SetStateAction } from "react";
+import {
+  MediaItem,
+  MediaPlatform,
+  MediaUploadType,
+} from "store/slices/types";
 
 interface VideoFormProps {
-  newVideo: VideoItem;
+  newVideo: MediaItem;
   errors: {
     pageTitle: boolean;
     pageDescription: boolean;
@@ -22,7 +26,7 @@ interface VideoFormProps {
     newVideoSrc: boolean;
     newVideoURL: boolean;
   };
-  setNewVideo: Dispatch<SetStateAction<VideoItem>>;
+  setNewVideo: Dispatch<SetStateAction<MediaItem>>;
   handleUploadFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleAddVideo: () => void;
   isEditing: boolean;
@@ -70,49 +74,50 @@ export default function VideoForm({
           <FormControl fullWidth>
             <InputLabel>Tipo</InputLabel>
             <Select
-              value={newVideo.type}
+              value={newVideo.uploadType}
               label="Tipo"
               onChange={(e) =>
                 setNewVideo((prev) => ({
                   ...prev,
-                  type: e.target.value as "upload" | "link",
-                  platform: e.target.value === "link" ? "youtube" : undefined,
+                  uploadType: e.target.value as MediaUploadType,
+                  platformType: e.target.value === MediaUploadType.LINK ? MediaPlatform.YOUTUBE : undefined,
                   url: "",
                   file: undefined,
-                  isLocalFile: e.target.value === "upload",
+                  isLocalFile: e.target.value === MediaUploadType.UPLOAD,
                 }))
               }
             >
-              <MenuItem value="link">Link</MenuItem>
-              <MenuItem value="upload">Upload</MenuItem>
+              <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
+              <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
-        {newVideo.type === "link" && (
+        {newVideo.uploadType === MediaUploadType.LINK && (
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Plataforma</InputLabel>
               <Select
-                value={newVideo.platform || ""}
+                value={newVideo.platformType || ""}
                 label="Plataforma"
                 onChange={(e) =>
                   setNewVideo((prev) => ({
                     ...prev,
-                    platform: e.target.value as VideoItem["platform"],
+                    platformType: e.target.value as MediaPlatform,
                   }))
                 }
               >
-                <MenuItem value="youtube">YouTube</MenuItem>
-                <MenuItem value="googledrive">Google Drive</MenuItem>
-                <MenuItem value="onedrive">OneDrive</MenuItem>
-                <MenuItem value="ANY">Outro</MenuItem>
+                <MenuItem value={MediaPlatform.YOUTUBE}>YouTube</MenuItem>
+                <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
+                <MenuItem value={MediaPlatform.ANY}>Outro</MenuItem>
               </Select>
             </FormControl>
           </Grid>
         )}
 
-        {newVideo.type === "link" && (
+        {newVideo.uploadType === MediaUploadType.LINK && (
           <Grid item xs={12}>
             <TextField
               label="URL do Vídeo (embed)"
@@ -131,7 +136,7 @@ export default function VideoForm({
           </Grid>
         )}
 
-        {newVideo.type === "upload" && (
+        {newVideo.uploadType === MediaUploadType.UPLOAD && (
           <Grid item xs={12}>
             <Button variant="outlined" component="label" sx={{ mr: 2 }}>
               Escolher Vídeo
@@ -156,7 +161,7 @@ export default function VideoForm({
             fullWidth
             onClick={handleAddVideo}
             disabled={
-              newVideo.type === "upload" &&
+              newVideo.uploadType === MediaUploadType.UPLOAD &&
               newVideo.file &&
               uploadProgress[newVideo.file.name] === false
             }

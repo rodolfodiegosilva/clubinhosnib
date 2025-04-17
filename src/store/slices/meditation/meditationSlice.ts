@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { MediaItem } from "../types";
 
 export type WeekDay = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday";
 
@@ -19,21 +20,6 @@ export enum WeekDayLabel {
   Friday = "Sexta-feira",
 }
 
-export interface MediaItem {
-  id?: string;
-  originalName?: string;
-  size?: number;
-  file?: File;
-  mediaType?: string;
-  title: string;
-  description: string;
-  type: "upload" | "link";
-  isLocalFile: boolean;
-  url: string;
-  platform?: "ANY" | "googledrive" | "onedrive" | "dropbox";
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
-}
 
 export interface MeditationData {
   id: string;

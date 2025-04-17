@@ -1,10 +1,14 @@
 import { Box, Typography, useTheme } from "@mui/material";
 import { motion } from "framer-motion";
 import DownloadButton from "./DownloadButton";
-import { WeekMediaItem } from "store/slices/week-material/weekMaterialSlice";
+import {
+  MediaItem,
+  MediaUploadType,
+  MediaPlatform,
+} from "store/slices/types";
 
 interface Props {
-  video: WeekMediaItem;
+  video: MediaItem;
 }
 
 export default function WeekVideoPlayer({ video }: Props) {
@@ -33,27 +37,32 @@ export default function WeekVideoPlayer({ video }: Props) {
   };
 
   const shouldRenderVideo = (): boolean => {
-    if (video.isLocalFile || video.type === "upload") return true;
-    if (video.type === "link" && (video.platform === "youtube" || video.platform === "googledrive")) return true;
+    if (video.isLocalFile || video.uploadType === MediaUploadType.UPLOAD) return true;
+    if (
+      video.uploadType === MediaUploadType.LINK &&
+      (video.platformType === MediaPlatform.YOUTUBE || video.platformType === MediaPlatform.GOOGLE_DRIVE)
+    )
+      return true;
     return false;
   };
 
   const shouldAllowDownload = (): boolean => {
     return (
       video.isLocalFile ||
-      video.type === "upload" ||
-      video.platform === "googledrive" ||
-      video.platform === "dropbox" ||
-      video.platform === "onedrive"
+      video.uploadType === MediaUploadType.UPLOAD ||
+      video.platformType === MediaPlatform.GOOGLE_DRIVE ||
+      video.platformType === MediaPlatform.DROPBOX ||
+      video.platformType === MediaPlatform.ONEDRIVE
     );
   };
 
   const renderVideo = () => {
     if (!video.url) return <Typography color="error">Vídeo não disponível.</Typography>;
 
-    if (!shouldRenderVideo()) return <Typography color="error">Esse vídeo não pode ser renderizado na página.</Typography>;
+    if (!shouldRenderVideo())
+      return <Typography color="error">Esse vídeo não pode ser renderizado na página.</Typography>;
 
-    if (video.isLocalFile || video.type === "upload") {
+    if (video.isLocalFile || video.uploadType === MediaUploadType.UPLOAD) {
       return (
         <video controls style={{ width: "100%", borderRadius: 12 }}>
           <source src={video.url} />
@@ -62,9 +71,9 @@ export default function WeekVideoPlayer({ video }: Props) {
       );
     }
 
-    if (video.type === "link") {
-      switch (video.platform) {
-        case "youtube": {
+    if (video.uploadType === MediaUploadType.LINK) {
+      switch (video.platformType) {
+        case MediaPlatform.YOUTUBE: {
           const embedUrl = getYouTubeEmbedUrl(video.url);
           return embedUrl ? (
             <iframe
@@ -78,7 +87,7 @@ export default function WeekVideoPlayer({ video }: Props) {
           );
         }
 
-        case "googledrive": {
+        case MediaPlatform.GOOGLE_DRIVE: {
           const embedUrl = getGoogleDriveEmbedUrl(video.url);
           return embedUrl ? (
             <iframe
@@ -116,7 +125,7 @@ export default function WeekVideoPlayer({ video }: Props) {
         </Typography>
         {shouldAllowDownload() && (
           <DownloadButton
-            url={video.platform === "dropbox" ? getDropboxRawUrl(video.url) : video.url}
+            url={video.platformType === MediaPlatform.DROPBOX ? getDropboxRawUrl(video.url) : video.url}
             filename={video.originalName || video.title || "video"}
           />
         )}

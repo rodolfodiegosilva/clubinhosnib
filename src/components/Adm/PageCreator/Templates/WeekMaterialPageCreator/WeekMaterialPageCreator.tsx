@@ -17,20 +17,20 @@ import { AppDispatch, RootState } from "../../../../../store/slices";
 import { fetchRoutes } from "../../../../../store/slices/route/routeSlice";
 import {
   clearWeekMaterialData,
-  WeekMediaItem,
 } from "../../../../../store/slices/week-material/weekMaterialSlice";
 import WeekVideos from "./WeekVideos";
 import WeekDocuments from "./WeekDocuments";
 import WeekAudios from "./WeekAudios";
 import WeekImages from "./WeekImages";
 import api from "../../../../../config/axiosConfig";
+import { MediaItem, MediaType, MediaUploadType, MediaPlatform } from "store/slices/types";
 
 interface WeekMaterialPageCreatorProps {
   fromTemplatePage?: boolean;
 }
 
 interface FileItem {
-  type: "upload" | "link";
+  uploadType: MediaUploadType;
   url?: string;
   file?: File;
   [key: string]: any;
@@ -42,14 +42,14 @@ function buildFileItem<T extends FileItem>(
   prefix: string,
   formData: FormData
 ): T & { fileField?: string } {
-  if (item.type === "upload" && item.file instanceof File) {
+  if (item.uploadType === MediaUploadType.UPLOAD && item.file instanceof File) {
     const extension = item.file.name.split(".").pop() || "bin";
     const filename = `${prefix}_${index}.${extension}`;
     formData.append(filename, item.file, filename);
 
     return {
       ...item,
-      url: undefined, // Removemos a URL local usada no front
+      url: undefined,
       fileField: filename,
     };
   }
@@ -65,17 +65,17 @@ export default function WeekMaterialPageCreator({
 }: WeekMaterialPageCreatorProps) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const studyData = useSelector((state: RootState) => state.weekMaterial.studyMaterialData);
+  const studyData = useSelector((state: RootState) => state.weekMaterial.weekMaterialSData);
 
   const [pageTitle, setPageTitle] = useState("");
   const [pageSubtitle, setPageSubtitle] = useState("");
   const [pageDescription, setPageDescription] = useState("");
   const [tab, setTab] = useState(0);
 
-  const [videos, setVideos] = useState<WeekMediaItem[]>([]);
-  const [documents, setDocuments] = useState<WeekMediaItem[]>([]);
-  const [images, setImages] = useState<WeekMediaItem[]>([]);
-  const [audios, setAudios] = useState<WeekMediaItem[]>([]);
+  const [videos, setVideos] = useState<MediaItem[]>([]);
+  const [documents, setDocuments] = useState<MediaItem[]>([]);
+  const [images, setImages] = useState<MediaItem[]>([]);
+  const [audios, setAudios] = useState<MediaItem[]>([]);
 
   const [errors, setErrors] = useState({
     title: false,
@@ -143,55 +143,28 @@ export default function WeekMaterialPageCreator({
       const processedImgs = images.map((i, n) => buildFileItem(i, n, "image", formData));
       const processedAudios = audios.map((a, x) => buildFileItem(a, x, "audio", formData));
 
+      const mapItem = (item: MediaItem & { fileField?: string }, type: MediaType) => ({
+        ...(item.id && { id: item.id }),
+        title: item.title,
+        description: item.description,
+        mediaType: type,
+        uploadType: item.uploadType,
+        isLocalFile: item.uploadType === MediaUploadType.UPLOAD,
+        ...(item.platformType && { platformType : item.platformType }),
+        ...(item.url && { url: item.url }),
+        ...(item.fileField && { fieldKey: item.fileField }),
+        ...(item.size && { size: item.size }),
+      });
+
       const payload = {
         ...(fromTemplatePage ? {} : { id: studyData?.id }),
         pageTitle,
         pageSubtitle,
         pageDescription,
-        videos: processedVideos.map((v) => ({
-          ...(v.id && { id: v.id }), // Inclui id apenas se existir
-          title: v.title,
-          description: v.description,
-          type: v.type,
-          isLocalFile: v.type === "upload" ? true : false,
-          ...(v.platform && { platform: v.platform }), // Inclui platform se existir
-          ...(v.url && { url: v.url }), // Inclui url se existir
-          ...(v.fileField && { fieldKey: v.fileField }), // Usa fieldKey em vez de fileField
-          ...(v.size && { size: String(v.size) }), // Converte size para string
-        })),
-        documents: processedDocs.map((d) => ({
-          ...(d.id && { id: d.id }),
-          title: d.title,
-          description: d.description,
-          type: d.type,
-          isLocalFile: d.type === "upload" ? true : false,
-          ...(d.platform && { platform: d.platform }),
-          ...(d.url && { url: d.url }),
-          ...(d.fileField && { fieldKey: d.fileField }),
-          ...(d.size && { size: String(d.size) }),
-        })),
-        images: processedImgs.map((i) => ({
-          ...(i.id && { id: i.id }),
-          title: i.title,
-          description: i.description,
-          type: i.type,
-          isLocalFile: i.type === "upload" ? true : false,
-          ...(i.platform && { platform: i.platform }),
-          ...(i.url && { url: i.url }),
-          ...(i.fileField && { fieldKey: i.fileField }),
-          ...(i.size && { size: String(i.size) }),
-        })),
-        audios: processedAudios.map((a) => ({
-          ...(a.id && { id: a.id }),
-          title: a.title,
-          description: a.description,
-          type: a.type,
-          isLocalFile: a.type === "upload" ? true : false,
-          ...(a.platform && { platform: a.platform }),
-          ...(a.url && { url: a.url }),
-          ...(a.fileField && { fieldKey: a.fileField }),
-          ...(a.size && { size: String(a.size) }),
-        })),
+        videos: processedVideos.map((v) => mapItem(v, MediaType.VIDEO)),
+        documents: processedDocs.map((d) => mapItem(d, MediaType.DOCUMENT)),
+        images: processedImgs.map((i) => mapItem(i, MediaType.IMAGE)),
+        audios: processedAudios.map((a) => mapItem(a, MediaType.AUDIO)),
       };
 
       formData.append("weekMaterialsPageData", JSON.stringify(payload));

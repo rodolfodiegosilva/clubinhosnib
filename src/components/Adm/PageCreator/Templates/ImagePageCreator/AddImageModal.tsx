@@ -12,7 +12,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { MediaItem } from "../../../../../store/slices/image/imageSlice";
+import { MediaItem, MediaPlatform, MediaUploadType, MediaType } from "store/slices/types";
 
 interface AddImageModalProps {
   isOpen: boolean;
@@ -21,11 +21,11 @@ interface AddImageModalProps {
 }
 
 export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps) {
-  const [mode, setMode] = useState<"upload" | "link">("upload");
+  const [mode, setMode] = useState<MediaUploadType>(MediaUploadType.UPLOAD);
   const [file, setFile] = useState<File | null>(null);
   const [tempUrl, setTempUrl] = useState("");
   const [urlInput, setUrlInput] = useState("");
-  const [platform, setPlatform] = useState<"ANY" | "googledrive" | "onedrive" | "dropbox">("ANY");
+  const [platformType , setPlatformType ] = useState<MediaPlatform>(MediaPlatform.ANY);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
@@ -43,35 +43,35 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
     setUrlInput("");
     setTitle("");
     setDescription("");
-    setPlatform("ANY");
-    setMode("upload");
+    setPlatformType (MediaPlatform.ANY);
+    setMode(MediaUploadType.UPLOAD);
   };
 
   const handleSubmit = () => {
     const base: Partial<MediaItem> = {
       title: title.trim(),
       description: description.trim(),
-      type: mode,
-      isLocalFile: mode === "upload",
+      uploadType: mode,
+      mediaType: MediaType.IMAGE,
+      isLocalFile: mode === MediaUploadType.UPLOAD,
     };
 
-    if (mode === "upload" && file) {
+    if (mode === MediaUploadType.UPLOAD && file) {
       onSubmit({
         ...base,
         file,
         url: "",
         originalName: file.name,
         size: file.size,
-        mediaType: "image",
       } as MediaItem);
     }
 
-    if (mode === "link" && urlInput.trim()) {
+    if (mode === MediaUploadType.LINK && urlInput.trim()) {
       onSubmit({
         ...base,
         url: urlInput.trim(),
+        platformType: platformType ,
         file: undefined,
-        platform,
       } as MediaItem);
     }
 
@@ -105,14 +105,14 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
           <Select
             value={mode}
             label="Modo de envio"
-            onChange={(e) => setMode(e.target.value as "upload" | "link")}
+            onChange={(e) => setMode(e.target.value as MediaUploadType)}
           >
-            <MenuItem value="upload">Upload</MenuItem>
-            <MenuItem value="link">Link</MenuItem>
+            <MenuItem value={MediaUploadType.UPLOAD}>Upload</MenuItem>
+            <MenuItem value={MediaUploadType.LINK}>Link</MenuItem>
           </Select>
         </FormControl>
 
-        {mode === "upload" && (
+        {mode === MediaUploadType.UPLOAD && (
           <>
             <Button
               variant="outlined"
@@ -144,19 +144,19 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
           </>
         )}
 
-        {mode === "link" && (
+        {mode === MediaUploadType.LINK && (
           <>
             <FormControl fullWidth margin="normal">
               <InputLabel>Plataforma</InputLabel>
               <Select
-                value={platform}
+                value={platformType }
                 label="Plataforma"
-                onChange={(e) => setPlatform(e.target.value as any)}
+                onChange={(e) => setPlatformType (e.target.value as MediaPlatform)}
               >
-                <MenuItem value="ANY">Outro</MenuItem>
-                <MenuItem value="googledrive">Google Drive</MenuItem>
-                <MenuItem value="onedrive">OneDrive</MenuItem>
-                <MenuItem value="dropbox">Dropbox</MenuItem>
+                <MenuItem value={MediaPlatform.ANY}>Outro</MenuItem>
+                <MenuItem value={MediaPlatform.GOOGLE_DRIVE}>Google Drive</MenuItem>
+                <MenuItem value={MediaPlatform.ONEDRIVE}>OneDrive</MenuItem>
+                <MenuItem value={MediaPlatform.DROPBOX}>Dropbox</MenuItem>
               </Select>
             </FormControl>
 
@@ -176,7 +176,7 @@ export function AddImageModal({ isOpen, onClose, onSubmit }: AddImageModalProps)
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={mode === "upload" ? !file : !urlInput.trim()}
+          disabled={mode === MediaUploadType.UPLOAD ? !file : !urlInput.trim()}
         >
           Adicionar
         </Button>
